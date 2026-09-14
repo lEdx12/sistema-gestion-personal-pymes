@@ -71,6 +71,17 @@ async function marcarSalida(id, horaSalida, horasTrabajadas) {
   return rows[0] || null;
 }
 
+async function actualizar(id, { hora_entrada, hora_salida, horas_trabajadas, ausente, justificacion }) {
+  const { rows } = await pool.query(
+    `UPDATE asistencia SET
+      hora_entrada = $1, hora_salida = $2, horas_trabajadas = $3, ausente = $4, justificacion = $5
+     WHERE id = $6
+     RETURNING ${COLUMNAS}`,
+    [hora_entrada || null, hora_salida || null, horas_trabajadas, ausente, justificacion || null, id],
+  );
+  return rows[0] || null;
+}
+
 module.exports = {
   findAll,
   findById,
@@ -78,4 +89,5 @@ module.exports = {
   crearMarcajeEntrada,
   crearAusencia,
   marcarSalida,
+  actualizar,
 };

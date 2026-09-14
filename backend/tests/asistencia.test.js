@@ -50,11 +50,11 @@ describe('POST /api/asistencia/entrada', () => {
 });
 
 describe('PUT /api/asistencia/:id/salida', () => {
-  it('CP-11: rechaza una hora de salida anterior a la de entrada', async () => {
+  it('CP-11 (revisado): rechaza una hora de salida igual a la de entrada', async () => {
     const registro = await request(app).get(`/api/asistencia?empleado_id=${empleadoId}`);
     const id = registro.body[0].id;
 
-    const res = await request(app).put(`/api/asistencia/${id}/salida`).send({ hora_salida: '07:00' });
+    const res = await request(app).put(`/api/asistencia/${id}/salida`).send({ hora_salida: '08:00' });
     expect(res.status).toBe(400);
   });
 
@@ -66,6 +66,50 @@ describe('PUT /api/asistencia/:id/salida', () => {
     expect(res.status).toBe(200);
     expect(res.body.hora_salida).toBe('17:30:00');
     expect(Number(res.body.horas_trabajadas)).toBe(9.5);
+  });
+
+  it('permite una salida en cualquier hora para turnos nocturnos (cruza la medianoche)', async () => {
+    const entrada = await request(app)
+      .post('/api/asistencia/entrada')
+      .send({ empleado_id: empleadoId, fecha: '2026-03-08', hora_entrada: '22:00' });
+
+    const res = await request(app)
+      .put(`/api/asistencia/${entrada.body.id}/salida`)
+      .send({ hora_salida: '06:00' });
+    expect(res.status).toBe(200);
+    expect(Number(res.body.horas_trabajadas)).toBe(8);
+  });
+});
+
+describe('PUT /api/asistencia/:id (edición)', () => {
+  it('corrige la hora de entrada y recalcula horas_trabajadas', async () => {
+    const listado = await request(app).get(`/api/asistencia?empleado_id=${empleadoId}`);
+    const registro = listado.body.find((r) => r.fecha.startsWith('2026-03-08'));
+
+    const res = await request(app)
+      .put(`/api/asistencia/${registro.id}`)
+      .send({ hora_entrada: '21:00' });
+    expect(res.status).toBe(200);
+    expect(res.body.hora_entrada).toBe('21:00:00');
+    expect(Number(res.body.horas_trabajadas)).toBe(9);
+  });
+
+  it('convierte un registro en ausencia con justificación, limpiando las horas', async () => {
+    const listado = await request(app).get(`/api/asistencia?empleado_id=${empleadoId}`);
+    const registro = listado.body.find((r) => r.fecha.startsWith('2026-03-08'));
+
+    const res = await request(app)
+      .put(`/api/asistencia/${registro.id}`)
+      .send({ ausente: true, justificacion: 'Error de tipeo, no trabajó ese día' });
+    expect(res.status).toBe(200);
+    expect(res.body.ausente).toBe(true);
+    expect(res.body.hora_entrada).toBeNull();
+    expect(res.body.hora_salida).toBeNull();
+  });
+
+  it('rechaza si no existe el registro', async () => {
+    const res = await request(app).put('/api/asistencia/999999').send({ hora_entrada: '08:00' });
+    expect(res.status).toBe(404);
   });
 });
 

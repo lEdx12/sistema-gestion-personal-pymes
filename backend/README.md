@@ -72,13 +72,23 @@ en `tests/contratos.test.js`.
 | GET | `/api/asistencia` | — (query opcional `?empleado_id=N&desde=YYYY-MM-DD&hasta=YYYY-MM-DD`) | `200` lista de registros |
 | GET | `/api/asistencia/:id` | — | `200` registro / `404` |
 | POST | `/api/asistencia/entrada` | `{ empleado_id, fecha, hora_entrada }` | `201` registro creado / `400` validación / `404` empleado no existe / `409` ya existe registro para esa fecha |
-| PUT | `/api/asistencia/:id/salida` | `{ hora_salida }` | `200` registro actualizado / `400` hora inválida (CP-11) o falta entrada / `409` ya tiene salida marcada / `404` |
+| PUT | `/api/asistencia/:id/salida` | `{ hora_salida }` | `200` registro actualizado / `400` si es igual a la entrada o falta entrada / `409` ya tiene salida marcada / `404` |
 | POST | `/api/asistencia/ausencia` | `{ empleado_id, fecha, justificacion }` | `201` registro creado (`ausente: true`) / `400` / `404` / `409` |
+| PUT | `/api/asistencia/:id` | `{ hora_entrada?, hora_salida?, ausente?, justificacion? }` | `200` registro corregido (recalcula `horas_trabajadas`) / `400` / `404` |
 
 RF-06 (registro de asistencia): un registro único por empleado/fecha (constraint
-`UNIQUE` de la tabla). `hora_salida` debe ser posterior a `hora_entrada`
-(`src/utils/horas.js`, reutilizado por RF-07/RF-08). Pruebas en `tests/horas.test.js` y
-`tests/asistencia.test.js` (incluye CP-11).
+`UNIQUE` de la tabla). `PUT /api/asistencia/:id` permite corregir un registro ya
+creado (error de tipeo en la hora, cambiar a ausencia, editar la justificación) sin
+tocar `fecha` ni `empleado_id`, para no romper esa unicidad. Pruebas en
+`tests/horas.test.js` y `tests/asistencia.test.js`.
+
+**Turnos nocturnos (actualizado):** la hora de salida puede ser cualquier hora, incluso
+numéricamente anterior a la de entrada — se interpreta como un turno que cruza la
+medianoche (ej. entrada 22:00, salida 06:00 → 8 horas). Esto reemplaza la validación
+original de CP-11 (sección 12 de `PROJECT.md`, que rechazaba `hora_salida < hora_entrada`)
+a pedido explícito del dueño de producto; lo único que se rechaza ahora es una salida
+igual a la entrada (duración ambigua). Ver `calcularHorasTrabajadas` en
+`src/services/horasTrabajadas.service.js`.
 
 | Método | Ruta | Body / Query | Respuesta |
 |--------|------|---------------|-----------|

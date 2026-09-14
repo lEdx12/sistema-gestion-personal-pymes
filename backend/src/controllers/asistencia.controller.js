@@ -54,6 +54,15 @@ async function ausencia(req, res) {
   }
 }
 
+async function actualizar(req, res) {
+  try {
+    const registro = await asistenciaService.actualizarAsistencia(req.params.id, req.body);
+    res.json(registro);
+  } catch (err) {
+    manejarError(res, err);
+  }
+}
+
 async function resumenSemanal(req, res) {
   try {
     const { empleado_id, desde, hasta } = req.query;
@@ -68,4 +77,4 @@ async function resumenSemanal(req, res) {
   }
 }
 
-module.exports = { listar, obtener, entrada, salida, ausencia, resumenSemanal };
+module.exports = { listar, obtener, entrada, salida, ausencia, actualizar, resumenSemanal };

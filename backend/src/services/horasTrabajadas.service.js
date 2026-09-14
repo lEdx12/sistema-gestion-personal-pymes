@@ -3,11 +3,18 @@ const { horaAMinutos } = require('../utils/horas');
 // TODO: validar valor legal vigente (Código del Trabajo, jornada ordinaria semanal)
 const JORNADA_SEMANAL_MAX_HORAS = Number(process.env.JORNADA_SEMANAL_MAX_HORAS) || 45;
 
-/** Calcula las horas trabajadas en un día a partir de la hora de entrada y salida. */
+/**
+ * Calcula las horas trabajadas a partir de la hora de entrada y salida. Soporta turnos
+ * nocturnos que cruzan la medianoche: si la salida es numéricamente anterior a la
+ * entrada, se asume que ocurrió al día siguiente (se le suman 24 horas).
+ */
 function calcularHorasTrabajadas(horaEntrada, horaSalida) {
-  const minutos = horaAMinutos(horaSalida) - horaAMinutos(horaEntrada);
-  if (minutos <= 0) {
-    throw new Error('La hora de salida debe ser posterior a la hora de entrada');
+  let minutos = horaAMinutos(horaSalida) - horaAMinutos(horaEntrada);
+  if (minutos === 0) {
+    throw new Error('La hora de salida no puede ser igual a la hora de entrada');
+  }
+  if (minutos < 0) {
+    minutos += 24 * 60;
   }
   return Math.round((minutos / 60) * 100) / 100;
 }

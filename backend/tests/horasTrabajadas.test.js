@@ -12,9 +12,16 @@ describe('calcularHorasTrabajadas', () => {
     expect(calcularHorasTrabajadas('08:00', '12:30')).toBe(4.5);
   });
 
-  it('lanza error si la salida no es posterior a la entrada', () => {
-    expect(() => calcularHorasTrabajadas('17:00', '08:00')).toThrow();
+  it('lanza error si la entrada y la salida son la misma hora (duración ambigua)', () => {
     expect(() => calcularHorasTrabajadas('08:00', '08:00')).toThrow();
+  });
+
+  it('calcula un turno nocturno que cruza la medianoche', () => {
+    expect(calcularHorasTrabajadas('22:00', '06:00')).toBe(8);
+  });
+
+  it('calcula un turno nocturno corto que cruza la medianoche', () => {
+    expect(calcularHorasTrabajadas('23:30', '00:30')).toBe(1);
   });
 });
 

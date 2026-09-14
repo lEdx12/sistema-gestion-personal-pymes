@@ -1,6 +1,5 @@
 const asistenciaModel = require('../models/asistencia.model');
 const empleadoModel = require('../models/empleado.model');
-const { esHoraPosterior } = require('../utils/horas');
 const {
   calcularHorasTrabajadas,
   calcularSobrejornadaSemanal,
@@ -59,12 +58,18 @@ async function registrarSalida(id, { hora_salida }) {
   if (registro.hora_salida) {
     throw new ServiceError(409, 'Este registro ya tiene una hora de salida marcada');
   }
-  if (!esHoraPosterior(registro.hora_entrada, hora_salida)) {
-    throw new ServiceError(400, 'La hora de salida debe ser posterior a la hora de entrada');
-  }
 
-  const horasTrabajadas = calcularHorasTrabajadas(registro.hora_entrada, hora_salida);
+  const horasTrabajadas = calcularHoras(registro.hora_entrada, hora_salida);
   return asistenciaModel.marcarSalida(id, hora_salida, horasTrabajadas);
+}
+
+/** Envuelve calcularHorasTrabajadas traduciendo su error a un ServiceError 400. */
+function calcularHoras(horaEntrada, horaSalida) {
+  try {
+    return calcularHorasTrabajadas(horaEntrada, horaSalida);
+  } catch (err) {
+    throw new ServiceError(400, err.message);
+  }
 }
 
 /**
@@ -106,6 +111,54 @@ async function registrarAusencia({ empleado_id, fecha, justificacion }) {
   return asistenciaModel.crearAusencia({ empleado_id, fecha, justificacion });
 }
 
+/**
+ * Corrige un registro de asistencia ya creado (error de tipeo en la hora, justificación,
+ * etc.). Solo se pueden modificar hora_entrada, hora_salida, ausente y justificacion —
+ * no la fecha ni el empleado, para no romper la unicidad empleado+fecha.
+ */
+async function actualizarAsistencia(id, datos) {
+  const registro = await obtenerAsistencia(id);
+  const ausente = datos.ausente !== undefined ? Boolean(datos.ausente) : registro.ausente;
+  const justificacion =
+    datos.justificacion !== undefined ? datos.justificacion : registro.justificacion;
+
+  if (ausente) {
+    if (datos.hora_entrada || datos.hora_salida) {
+      throw new ServiceError(
+        400,
+        'Un registro marcado como ausente no puede tener hora de entrada ni de salida',
+      );
+    }
+    if (!justificacion) {
+      throw new ServiceError(400, 'Debe indicar una justificación para marcar el registro como ausente');
+    }
+    return asistenciaModel.actualizar(id, {
+      hora_entrada: null,
+      hora_salida: null,
+      horas_trabajadas: null,
+      ausente: true,
+      justificacion,
+    });
+  }
+
+  const horaEntrada = datos.hora_entrada !== undefined ? datos.hora_entrada : registro.hora_entrada;
+  const horaSalida = datos.hora_salida !== undefined ? datos.hora_salida : registro.hora_salida;
+
+  if (!horaEntrada) {
+    throw new ServiceError(400, 'Debe indicar la hora de entrada si el registro no es una ausencia');
+  }
+
+  const horasTrabajadas = horaSalida ? calcularHoras(horaEntrada, horaSalida) : null;
+
+  return asistenciaModel.actualizar(id, {
+    hora_entrada: horaEntrada,
+    hora_salida: horaSalida,
+    horas_trabajadas: horasTrabajadas,
+    ausente: false,
+    justificacion,
+  });
+}
+
 module.exports = {
   ServiceError,
   listarAsistencia,
@@ -114,4 +167,5 @@ module.exports = {
   registrarSalida,
   registrarAusencia,
   obtenerResumenSemanal,
+  actualizarAsistencia,
 };

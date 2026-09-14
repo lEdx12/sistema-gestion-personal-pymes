@@ -15,6 +15,11 @@ export async function marcarSalida(id, hora_salida) {
   return data;
 }
 
+export async function actualizarAsistencia(id, datos) {
+  const { data } = await api.put(`/asistencia/${id}`, datos);
+  return data;
+}
+
 export async function registrarAusencia(datos) {
   const { data } = await api.post('/asistencia/ausencia', datos);
   return data;

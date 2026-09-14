@@ -5,6 +5,7 @@ import {
   listarAsistencia,
   marcarEntrada,
   marcarSalida,
+  actualizarAsistencia,
   registrarAusencia,
   obtenerResumenSemanal,
 } from '../services/asistencia.service';
@@ -63,6 +64,11 @@ function Asistencia() {
     } catch (err) {
       setError(err.response?.data?.error || 'Error al marcar la salida');
     }
+  }
+
+  async function handleActualizar(id, datos) {
+    await actualizarAsistencia(id, datos);
+    await cargar();
   }
 
   async function handleResumen(e) {
@@ -163,7 +169,12 @@ function Asistencia() {
         </thead>
         <tbody>
           {registros.map((registro) => (
-            <AsistenciaRow key={registro.id} registro={registro} onMarcarSalida={handleMarcarSalida} />
+            <AsistenciaRow
+              key={registro.id}
+              registro={registro}
+              onMarcarSalida={handleMarcarSalida}
+              onActualizar={handleActualizar}
+            />
           ))}
         </tbody>
       </table>

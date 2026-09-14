@@ -9,5 +9,6 @@ router.get('/:id', controller.obtener);
 router.post('/entrada', controller.entrada);
 router.post('/ausencia', controller.ausencia);
 router.put('/:id/salida', controller.salida);
+router.put('/:id', controller.actualizar);
 
 module.exports = router;
