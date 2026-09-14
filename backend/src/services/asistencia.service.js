@@ -5,6 +5,7 @@ const {
   calcularHorasTrabajadas,
   calcularSobrejornadaSemanal,
 } = require('./horasTrabajadas.service');
+const { calcularHorasExtra } = require('./horasExtra.service');
 
 class ServiceError extends Error {
   constructor(status, message) {
@@ -66,16 +67,26 @@ async function registrarSalida(id, { hora_salida }) {
   return asistenciaModel.marcarSalida(id, hora_salida, horasTrabajadas);
 }
 
-/** Suma las horas trabajadas de un empleado en un rango de fechas y detecta sobrejornada. */
+/**
+ * Suma las horas trabajadas de un empleado en un rango de fechas, detecta sobrejornada
+ * (RF-07) y calcula el monto de horas extra a pagar sobre su sueldo base (RF-08).
+ */
 async function obtenerResumenSemanal({ empleadoId, desde, hasta }) {
   if (!empleadoId || !desde || !hasta) {
     throw new ServiceError(400, 'Los parámetros "empleado_id", "desde" y "hasta" son obligatorios');
   }
-  await asegurarEmpleadoExiste(empleadoId);
+  const empleado = await asegurarEmpleadoExiste(empleadoId);
 
   const registros = await asistenciaModel.findAll({ empleadoId, desde, hasta });
   const horasPorDia = registros.map((r) => r.horas_trabajadas);
-  return calcularSobrejornadaSemanal(horasPorDia);
+  const resumenHoras = calcularSobrejornadaSemanal(horasPorDia);
+
+  const { valorHoraOrdinaria, montoHorasExtra } = calcularHorasExtra({
+    sueldoBase: Number(empleado.sueldo_base),
+    horasSobrejornada: resumenHoras.horasSobrejornada,
+  });
+
+  return { ...resumenHoras, valorHoraOrdinaria, montoHorasExtra };
 }
 
 async function registrarAusencia({ empleado_id, fecha, justificacion }) {

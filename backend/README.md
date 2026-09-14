@@ -86,6 +86,16 @@ RF-07 (cálculo de horas trabajadas): `src/services/horasTrabajadas.service.js` 
 hardcodeada**, ver sección 5 de `PROJECT.md`). Pruebas en `tests/horasTrabajadas.test.js`
 (incluye CP-05: 50h trabajadas → 5h de sobrejornada).
 
+RF-08 (cálculo de horas extra): `src/services/horasExtra.service.js` expone
+`calcularValorHoraOrdinaria(sueldoBase, horasMensuales?)` y
+`calcularMontoHorasExtra(horasExtra, valorHoraOrdinaria, recargo?)` (funciones puras).
+El recargo (default 50%, `RECARGO_HORA_EXTRA`) y las horas mensuales de jornada usadas
+para el valor hora (default 180, `HORAS_MENSUALES_JORNADA`) son configurables — **no
+hardcodeados**. `GET /api/asistencia/resumen-semanal` ahora también devuelve
+`valorHoraOrdinaria` y `montoHorasExtra`, usando el `sueldo_base` del empleado. Pruebas
+en `tests/horasExtra.test.js` (incluye CP-05 completo: 5h extra → $37.500 con sueldo
+base $900.000 y recargo 50%).
+
 Cada nuevo RF debe agregar su tabla de endpoints aquí (método, ruta, body esperado,
 respuesta) al completarse.
 

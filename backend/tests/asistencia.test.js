@@ -78,6 +78,8 @@ describe('GET /api/asistencia/resumen-semanal', () => {
     expect(res.body.totalHoras).toBe(9.5);
     expect(res.body.horasSobrejornada).toBe(0);
     expect(res.body.jornadaMaxHoras).toBe(45);
+    expect(res.body.montoHorasExtra).toBe(0);
+    expect(res.body.valorHoraOrdinaria).toBe(Math.round(480000 / 180));
   });
 
   it('rechaza si falta algún parámetro', async () => {

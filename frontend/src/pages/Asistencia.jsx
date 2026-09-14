@@ -141,6 +141,9 @@ function Asistencia() {
             <p>
               Total: {resumen.totalHoras} h — Sobrejornada: {resumen.horasSobrejornada} h (jornada
               máx.: {resumen.jornadaMaxHoras} h)
+              <br />
+              Valor hora ordinaria: ${resumen.valorHoraOrdinaria} — Monto horas extra: $
+              {resumen.montoHorasExtra}
             </p>
           )}
         </form>
