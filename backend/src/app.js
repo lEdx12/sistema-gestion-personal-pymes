@@ -1,4 +1,5 @@
 const express = require('express');
+const path = require('path');
 const cors = require('cors');
 const morgan = require('morgan');
 const mockAuth = require('./middleware/mockAuth');
@@ -12,6 +13,7 @@ app.use(cors());
 app.use(express.json());
 app.use(morgan('dev'));
 app.use(mockAuth);
+app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
 
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', user: req.user });

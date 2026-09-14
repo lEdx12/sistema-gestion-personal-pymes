@@ -54,4 +54,13 @@ async function desactivar(req, res) {
   }
 }
 
-module.exports = { listar, obtener, crear, actualizar, desactivar };
+async function reactivar(req, res) {
+  try {
+    const empleado = await empleadosService.reactivarEmpleado(req.params.id);
+    res.json(empleado);
+  } catch (err) {
+    manejarError(res, err);
+  }
+}
+
+module.exports = { listar, obtener, crear, actualizar, desactivar, reactivar };

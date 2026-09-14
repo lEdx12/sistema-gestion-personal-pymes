@@ -93,6 +93,12 @@ async function renovarContrato(contratoActualId, datosNuevoContrato) {
   }
 }
 
+/** Guarda la URL del documento subido para un contrato existente. */
+async function subirDocumento(id, documentoUrl) {
+  await obtenerContrato(id);
+  return contratoModel.actualizarDocumento(id, documentoUrl);
+}
+
 module.exports = {
   ServiceError,
   listarContratos,
@@ -100,4 +106,5 @@ module.exports = {
   crearContrato,
   actualizarContrato,
   renovarContrato,
+  subirDocumento,
 };

@@ -1,7 +1,7 @@
 import api from './api';
 
-export async function listarEmpleados() {
-  const { data } = await api.get('/empleados');
+export async function listarEmpleados(incluirInactivos = false) {
+  const { data } = await api.get('/empleados', { params: { incluirInactivos } });
   return data;
 }
 
@@ -12,5 +12,10 @@ export async function crearEmpleado(empleado) {
 
 export async function desactivarEmpleado(id) {
   const { data } = await api.put(`/empleados/${id}/desactivar`);
+  return data;
+}
+
+export async function reactivarEmpleado(id) {
+  const { data } = await api.put(`/empleados/${id}/reactivar`);
   return data;
 }

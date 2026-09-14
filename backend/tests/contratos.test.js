@@ -1,9 +1,12 @@
 const request = require('supertest');
+const fs = require('fs');
+const path = require('path');
 const app = require('../src/app');
 const pool = require('../src/config/db');
 
 const RUT_EMPLEADO = '9418574-2';
 let empleadoId;
+const archivosSubidos = [];
 
 beforeAll(async () => {
   await pool.query('DELETE FROM empleados WHERE rut = $1', [RUT_EMPLEADO]);
@@ -19,6 +22,9 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
+  for (const archivo of archivosSubidos) {
+    fs.rmSync(path.join(__dirname, '..', 'uploads', 'contratos', archivo), { force: true });
+  }
   await pool.query('DELETE FROM contratos WHERE empleado_id = $1', [empleadoId]);
   await pool.query('DELETE FROM empleados WHERE id = $1', [empleadoId]);
   await pool.end();
@@ -95,5 +101,60 @@ describe('GET /api/contratos', () => {
     expect(res.status).toBe(200);
     expect(res.body.length).toBeGreaterThanOrEqual(2);
     expect(res.body.every((c) => c.empleado_id === empleadoId)).toBe(true);
+  });
+});
+
+describe('POST /api/contratos/:id/documento', () => {
+  it('sube un documento y actualiza documento_url', async () => {
+    const listado = await request(app).get(`/api/contratos?empleado_id=${empleadoId}`);
+    const contrato = listado.body[0];
+
+    const res = await request(app)
+      .post(`/api/contratos/${contrato.id}/documento`)
+      .attach('documento', Buffer.from('contenido de prueba'), {
+        filename: 'contrato.pdf',
+        contentType: 'application/pdf',
+      });
+
+    expect(res.status).toBe(200);
+    expect(res.body.documento_url).toMatch(/^\/uploads\/contratos\/contrato-/);
+    archivosSubidos.push(path.basename(res.body.documento_url));
+  });
+
+  it('rechaza un tipo de archivo no permitido', async () => {
+    const listado = await request(app).get(`/api/contratos?empleado_id=${empleadoId}`);
+    const contrato = listado.body[0];
+
+    const res = await request(app)
+      .post(`/api/contratos/${contrato.id}/documento`)
+      .attach('documento', Buffer.from('contenido'), {
+        filename: 'archivo.exe',
+        contentType: 'application/octet-stream',
+      });
+
+    expect(res.status).toBe(400);
+  });
+
+  it('rechaza si no se envía ningún archivo', async () => {
+    const listado = await request(app).get(`/api/contratos?empleado_id=${empleadoId}`);
+    const contrato = listado.body[0];
+
+    const res = await request(app).post(`/api/contratos/${contrato.id}/documento`);
+    expect(res.status).toBe(400);
+  });
+
+  it('rechaza si el contrato no existe', async () => {
+    const res = await request(app)
+      .post('/api/contratos/999999/documento')
+      .attach('documento', Buffer.from('contenido'), {
+        filename: 'contrato.pdf',
+        contentType: 'application/pdf',
+      });
+    expect(res.status).toBe(404);
+
+    const dirContratos = path.join(__dirname, '..', 'uploads', 'contratos');
+    for (const archivo of fs.readdirSync(dirContratos)) {
+      if (archivo.startsWith('contrato-999999-')) archivosSubidos.push(archivo);
+    }
   });
 });

@@ -1,7 +1,13 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import ContratoForm from '../components/ContratoForm';
-import { listarContratos, crearContrato, renovarContrato } from '../services/contratos.service';
+import ContratoDocumento from '../components/ContratoDocumento';
+import {
+  listarContratos,
+  crearContrato,
+  renovarContrato,
+  subirDocumentoContrato,
+} from '../services/contratos.service';
 
 function Contratos() {
   const { empleadoId } = useParams();
@@ -43,6 +49,11 @@ function Contratos() {
     }
   }
 
+  async function handleSubirDocumento(contratoId, archivo) {
+    await subirDocumentoContrato(contratoId, archivo);
+    await cargar();
+  }
+
   return (
     <div style={{ padding: '2rem', fontFamily: 'sans-serif' }}>
       <p>
@@ -69,6 +80,7 @@ function Contratos() {
             <th>Inicio</th>
             <th>Término</th>
             <th>Activo</th>
+            <th>Documento</th>
           </tr>
         </thead>
         <tbody>
@@ -78,6 +90,9 @@ function Contratos() {
               <td>{c.fecha_inicio?.slice(0, 10)}</td>
               <td>{c.fecha_termino?.slice(0, 10) || '—'}</td>
               <td>{c.activo ? 'Sí' : 'No'}</td>
+              <td>
+                <ContratoDocumento contrato={c} onSubirDocumento={handleSubirDocumento} />
+              </td>
             </tr>
           ))}
         </tbody>

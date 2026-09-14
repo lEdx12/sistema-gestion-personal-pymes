@@ -59,4 +59,20 @@ async function cerrar(id, fechaTermino, client = pool) {
   return rows[0] || null;
 }
 
-module.exports = { findAll, findById, findActivoByEmpleado, create, update, cerrar };
+async function actualizarDocumento(id, documentoUrl) {
+  const { rows } = await pool.query(
+    `UPDATE contratos SET documento_url = $1 WHERE id = $2 RETURNING ${COLUMNAS}`,
+    [documentoUrl, id],
+  );
+  return rows[0] || null;
+}
+
+module.exports = {
+  findAll,
+  findById,
+  findActivoByEmpleado,
+  create,
+  update,
+  cerrar,
+  actualizarDocumento,
+};

@@ -12,6 +12,7 @@ module.exports = [
         process: 'readonly',
         console: 'readonly',
         __dirname: 'readonly',
+        Buffer: 'readonly',
       },
     },
     rules: {

@@ -72,6 +72,11 @@ async function desactivarEmpleado(id) {
   return empleadoModel.desactivar(id);
 }
 
+async function reactivarEmpleado(id) {
+  await obtenerEmpleado(id);
+  return empleadoModel.reactivar(id);
+}
+
 module.exports = {
   ServiceError,
   listarEmpleados,
@@ -79,4 +84,5 @@ module.exports = {
   crearEmpleado,
   actualizarEmpleado,
   desactivarEmpleado,
+  reactivarEmpleado,
 };

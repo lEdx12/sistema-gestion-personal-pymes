@@ -54,4 +54,17 @@ async function renovar(req, res) {
   }
 }
 
-module.exports = { listar, obtener, crear, actualizar, renovar };
+async function subirDocumento(req, res) {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'No se recibió ningún archivo' });
+    }
+    const documentoUrl = `/uploads/contratos/${req.file.filename}`;
+    const contrato = await contratosService.subirDocumento(req.params.id, documentoUrl);
+    res.json(contrato);
+  } catch (err) {
+    manejarError(res, err);
+  }
+}
+
+module.exports = { listar, obtener, crear, actualizar, renovar, subirDocumento };

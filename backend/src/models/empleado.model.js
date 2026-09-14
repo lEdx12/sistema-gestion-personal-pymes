@@ -101,4 +101,12 @@ async function desactivar(id) {
   return rows[0] || null;
 }
 
-module.exports = { findAll, findById, findByRut, create, update, desactivar };
+async function reactivar(id) {
+  const { rows } = await pool.query(
+    `UPDATE empleados SET activo = TRUE WHERE id = $1 RETURNING ${COLUMNAS}`,
+    [id],
+  );
+  return rows[0] || null;
+}
+
+module.exports = { findAll, findById, findByRut, create, update, desactivar, reactivar };

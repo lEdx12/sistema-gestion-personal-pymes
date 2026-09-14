@@ -70,6 +70,19 @@ describe('PUT /api/empleados/:id/desactivar', () => {
     const res = await request(app).put(`/api/empleados/${creado.body.id}/desactivar`);
     expect(res.status).toBe(200);
     expect(res.body.activo).toBe(false);
+
+    const reactivado = await request(app).put(`/api/empleados/${creado.body.id}/reactivar`);
+    expect(reactivado.status).toBe(200);
+    expect(reactivado.body.activo).toBe(true);
+
+    const listado = await request(app).get('/api/empleados');
+    expect(listado.body.find((e) => e.rut === '7594890-5')).toBeTruthy();
+
     await pool.query('DELETE FROM empleados WHERE rut = $1', ['7594890-5']);
+  });
+
+  it('rechaza reactivar un empleado inexistente', async () => {
+    const res = await request(app).put('/api/empleados/999999/reactivar');
+    expect(res.status).toBe(404);
   });
 });
