@@ -4,6 +4,7 @@ const controller = require('../controllers/asistencia.controller');
 const router = express.Router();
 
 router.get('/', controller.listar);
+router.get('/resumen-semanal', controller.resumenSemanal);
 router.get('/:id', controller.obtener);
 router.post('/entrada', controller.entrada);
 router.post('/ausencia', controller.ausencia);

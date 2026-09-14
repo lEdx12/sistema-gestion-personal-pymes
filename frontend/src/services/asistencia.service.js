@@ -19,3 +19,10 @@ export async function registrarAusencia(datos) {
   const { data } = await api.post('/asistencia/ausencia', datos);
   return data;
 }
+
+export async function obtenerResumenSemanal(empleadoId, desde, hasta) {
+  const { data } = await api.get('/asistencia/resumen-semanal', {
+    params: { empleado_id: empleadoId, desde, hasta },
+  });
+  return data;
+}

@@ -63,10 +63,10 @@ async function crearAusencia({ empleado_id, fecha, justificacion }) {
   return rows[0];
 }
 
-async function marcarSalida(id, horaSalida) {
+async function marcarSalida(id, horaSalida, horasTrabajadas) {
   const { rows } = await pool.query(
-    `UPDATE asistencia SET hora_salida = $1 WHERE id = $2 RETURNING ${COLUMNAS}`,
-    [horaSalida, id],
+    `UPDATE asistencia SET hora_salida = $1, horas_trabajadas = $2 WHERE id = $3 RETURNING ${COLUMNAS}`,
+    [horaSalida, horasTrabajadas, id],
   );
   return rows[0] || null;
 }

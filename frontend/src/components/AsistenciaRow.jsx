@@ -15,6 +15,7 @@ function AsistenciaRow({ registro, onMarcarSalida }) {
       <td>{registro.fecha?.slice(0, 10)}</td>
       <td>{registro.ausente ? '—' : registro.hora_entrada?.slice(0, 5) || '—'}</td>
       <td>{registro.ausente ? '—' : registro.hora_salida?.slice(0, 5) || '—'}</td>
+      <td>{registro.horas_trabajadas ?? '—'}</td>
       <td>{registro.ausente ? 'Sí' : 'No'}</td>
       <td>{registro.justificacion || ''}</td>
       <td>

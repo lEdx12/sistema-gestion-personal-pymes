@@ -54,4 +54,18 @@ async function ausencia(req, res) {
   }
 }
 
-module.exports = { listar, obtener, entrada, salida, ausencia };
+async function resumenSemanal(req, res) {
+  try {
+    const { empleado_id, desde, hasta } = req.query;
+    const resumen = await asistenciaService.obtenerResumenSemanal({
+      empleadoId: empleado_id,
+      desde,
+      hasta,
+    });
+    res.json(resumen);
+  } catch (err) {
+    manejarError(res, err);
+  }
+}
+
+module.exports = { listar, obtener, entrada, salida, ausencia, resumenSemanal };

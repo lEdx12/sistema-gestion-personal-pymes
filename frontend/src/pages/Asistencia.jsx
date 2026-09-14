@@ -6,10 +6,12 @@ import {
   marcarEntrada,
   marcarSalida,
   registrarAusencia,
+  obtenerResumenSemanal,
 } from '../services/asistencia.service';
 
 const FORM_ENTRADA_VACIO = { fecha: '', hora_entrada: '' };
 const FORM_AUSENCIA_VACIO = { fecha: '', justificacion: '' };
+const FORM_RESUMEN_VACIO = { desde: '', hasta: '' };
 
 function Asistencia() {
   const { empleadoId } = useParams();
@@ -17,6 +19,8 @@ function Asistencia() {
   const [error, setError] = useState(null);
   const [formEntrada, setFormEntrada] = useState(FORM_ENTRADA_VACIO);
   const [formAusencia, setFormAusencia] = useState(FORM_AUSENCIA_VACIO);
+  const [formResumen, setFormResumen] = useState(FORM_RESUMEN_VACIO);
+  const [resumen, setResumen] = useState(null);
 
   const cargar = useCallback(async () => {
     const data = await listarAsistencia(empleadoId);
@@ -58,6 +62,18 @@ function Asistencia() {
       await cargar();
     } catch (err) {
       setError(err.response?.data?.error || 'Error al marcar la salida');
+    }
+  }
+
+  async function handleResumen(e) {
+    e.preventDefault();
+    setError(null);
+    setResumen(null);
+    try {
+      const data = await obtenerResumenSemanal(empleadoId, formResumen.desde, formResumen.hasta);
+      setResumen(data);
+    } catch (err) {
+      setError(err.response?.data?.error || 'Error al calcular el resumen');
     }
   }
 
@@ -105,6 +121,29 @@ function Asistencia() {
           />
           <button type="submit">Registrar ausencia</button>
         </form>
+
+        <form onSubmit={handleResumen} style={{ display: 'grid', gap: '0.5rem', maxWidth: 250 }}>
+          <h2>Resumen semanal</h2>
+          <input
+            type="date"
+            value={formResumen.desde}
+            onChange={(e) => setFormResumen({ ...formResumen, desde: e.target.value })}
+            required
+          />
+          <input
+            type="date"
+            value={formResumen.hasta}
+            onChange={(e) => setFormResumen({ ...formResumen, hasta: e.target.value })}
+            required
+          />
+          <button type="submit">Calcular</button>
+          {resumen && (
+            <p>
+              Total: {resumen.totalHoras} h — Sobrejornada: {resumen.horasSobrejornada} h (jornada
+              máx.: {resumen.jornadaMaxHoras} h)
+            </p>
+          )}
+        </form>
       </div>
 
       <table style={{ marginTop: '2rem', borderCollapse: 'collapse', width: '100%' }}>
@@ -113,6 +152,7 @@ function Asistencia() {
             <th>Fecha</th>
             <th>Entrada</th>
             <th>Salida</th>
+            <th>Horas trabajadas</th>
             <th>Ausente</th>
             <th>Justificación</th>
             <th></th>

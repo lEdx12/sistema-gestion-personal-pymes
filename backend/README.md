@@ -70,9 +70,21 @@ nuevo) y crea el siguiente dentro de la misma transacción de BD
 
 RF-06 (registro de asistencia): un registro único por empleado/fecha (constraint
 `UNIQUE` de la tabla). `hora_salida` debe ser posterior a `hora_entrada`
-(`src/utils/horas.js`, reutilizado por RF-07/RF-08). Las columnas `horas_trabajadas` y
-`horas_extra` quedan sin calcular hasta implementar RF-07/RF-08. Pruebas en
-`tests/horas.test.js` y `tests/asistencia.test.js` (incluye CP-11).
+(`src/utils/horas.js`, reutilizado por RF-07/RF-08). Pruebas en `tests/horas.test.js` y
+`tests/asistencia.test.js` (incluye CP-11).
+
+| Método | Ruta | Body / Query | Respuesta |
+|--------|------|---------------|-----------|
+| GET | `/api/asistencia/resumen-semanal` | query `empleado_id, desde, hasta` (obligatorios) | `200` `{ totalHoras, horasSobrejornada, jornadaMaxHoras }` / `400` / `404` |
+
+RF-07 (cálculo de horas trabajadas): `src/services/horasTrabajadas.service.js` expone
+`calcularHorasTrabajadas(horaEntrada, horaSalida)` (función pura) y
+`calcularSobrejornadaSemanal(horasPorDia, jornadaMaxHoras?)`. Al marcar la salida
+(`PUT /api/asistencia/:id/salida`) se calculan y persisten automáticamente las
+`horas_trabajadas` del día. La jornada ordinaria semanal es configurable vía
+`JORNADA_SEMANAL_MAX_HORAS` (default 45h, Art. 32 Código del Trabajo — **no
+hardcodeada**, ver sección 5 de `PROJECT.md`). Pruebas en `tests/horasTrabajadas.test.js`
+(incluye CP-05: 50h trabajadas → 5h de sobrejornada).
 
 Cada nuevo RF debe agregar su tabla de endpoints aquí (método, ruta, body esperado,
 respuesta) al completarse.

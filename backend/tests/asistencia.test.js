@@ -58,13 +58,33 @@ describe('PUT /api/asistencia/:id/salida', () => {
     expect(res.status).toBe(400);
   });
 
-  it('marca la salida cuando la hora es posterior a la de entrada', async () => {
+  it('marca la salida, calcula horas_trabajadas y la hora queda posterior a la de entrada', async () => {
     const registro = await request(app).get(`/api/asistencia?empleado_id=${empleadoId}`);
     const id = registro.body[0].id;
 
     const res = await request(app).put(`/api/asistencia/${id}/salida`).send({ hora_salida: '17:30' });
     expect(res.status).toBe(200);
     expect(res.body.hora_salida).toBe('17:30:00');
+    expect(Number(res.body.horas_trabajadas)).toBe(9.5);
+  });
+});
+
+describe('GET /api/asistencia/resumen-semanal', () => {
+  it('suma las horas trabajadas del rango y calcula la sobrejornada', async () => {
+    const res = await request(app)
+      .get('/api/asistencia/resumen-semanal')
+      .query({ empleado_id: empleadoId, desde: '2026-03-01', hasta: '2026-03-07' });
+    expect(res.status).toBe(200);
+    expect(res.body.totalHoras).toBe(9.5);
+    expect(res.body.horasSobrejornada).toBe(0);
+    expect(res.body.jornadaMaxHoras).toBe(45);
+  });
+
+  it('rechaza si falta algún parámetro', async () => {
+    const res = await request(app)
+      .get('/api/asistencia/resumen-semanal')
+      .query({ empleado_id: empleadoId });
+    expect(res.status).toBe(400);
   });
 });
 
