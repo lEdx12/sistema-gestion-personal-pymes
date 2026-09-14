@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import api from '../services/api';
 
 function Home() {
@@ -23,6 +24,9 @@ function Home() {
         </p>
       )}
       {!health && !error && <p>Conectando al backend...</p>}
+      <p>
+        <Link to="/empleados">Ir a Empleados</Link>
+      </p>
     </div>
   );
 }
