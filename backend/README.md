@@ -34,6 +34,16 @@ completar RF-01 en el Sprint 2.
 | Método | Ruta | Body | Respuesta |
 |--------|------|------|-----------|
 | GET | `/api/health` | — | `{ status: 'ok', user }` — verifica que el backend está arriba y expone el usuario mock |
+| GET | `/api/empleados` | — (query opcional `?incluirInactivos=true`) | `200` lista de empleados (activos por defecto) |
+| GET | `/api/empleados/:id` | — | `200` empleado / `404` si no existe |
+| POST | `/api/empleados` | `{ rut, nombre, apellido, fecha_ingreso, sueldo_base, fecha_nacimiento?, direccion?, telefono?, email?, cargo? }` | `201` empleado creado / `400` validación (campo obligatorio o RUT inválido) / `409` "Empleado ya registrado" si el RUT ya existe |
+| PUT | `/api/empleados/:id` | mismos campos que POST (sin `rut`) | `200` empleado actualizado / `400` / `404` |
+| PUT | `/api/empleados/:id/desactivar` | — | `200` empleado con `activo: false` / `404` |
+
+RF-03 (registro de empleados): validación de RUT chileno (dígito verificador, módulo 11)
+en `src/utils/rut.js`, reglas de negocio en `src/services/empleados.service.js`, acceso a
+datos en `src/models/empleado.model.js`. Pruebas en `tests/rut.test.js` y
+`tests/empleados.test.js` (incluye CP-03: RUT duplicado).
 
 Cada nuevo RF debe agregar su tabla de endpoints aquí (método, ruta, body esperado,
 respuesta) al completarse.
