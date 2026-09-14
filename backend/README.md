@@ -60,6 +60,20 @@ empleado solo puede tener un contrato activo a la vez — para reemplazarlo se u
 nuevo) y crea el siguiente dentro de la misma transacción de BD
 (`src/services/contratos.service.js`). Pruebas en `tests/contratos.test.js`.
 
+| Método | Ruta | Body | Respuesta |
+|--------|------|------|-----------|
+| GET | `/api/asistencia` | — (query opcional `?empleado_id=N&desde=YYYY-MM-DD&hasta=YYYY-MM-DD`) | `200` lista de registros |
+| GET | `/api/asistencia/:id` | — | `200` registro / `404` |
+| POST | `/api/asistencia/entrada` | `{ empleado_id, fecha, hora_entrada }` | `201` registro creado / `400` validación / `404` empleado no existe / `409` ya existe registro para esa fecha |
+| PUT | `/api/asistencia/:id/salida` | `{ hora_salida }` | `200` registro actualizado / `400` hora inválida (CP-11) o falta entrada / `409` ya tiene salida marcada / `404` |
+| POST | `/api/asistencia/ausencia` | `{ empleado_id, fecha, justificacion }` | `201` registro creado (`ausente: true`) / `400` / `404` / `409` |
+
+RF-06 (registro de asistencia): un registro único por empleado/fecha (constraint
+`UNIQUE` de la tabla). `hora_salida` debe ser posterior a `hora_entrada`
+(`src/utils/horas.js`, reutilizado por RF-07/RF-08). Las columnas `horas_trabajadas` y
+`horas_extra` quedan sin calcular hasta implementar RF-07/RF-08. Pruebas en
+`tests/horas.test.js` y `tests/asistencia.test.js` (incluye CP-11).
+
 Cada nuevo RF debe agregar su tabla de endpoints aquí (método, ruta, body esperado,
 respuesta) al completarse.
 

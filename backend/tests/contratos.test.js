@@ -2,7 +2,7 @@ const request = require('supertest');
 const app = require('../src/app');
 const pool = require('../src/config/db');
 
-const RUT_EMPLEADO = '12345678-5';
+const RUT_EMPLEADO = '9418574-2';
 let empleadoId;
 
 beforeAll(async () => {

@@ -1,0 +1,94 @@
+const request = require('supertest');
+const app = require('../src/app');
+const pool = require('../src/config/db');
+
+const RUT_EMPLEADO = '7897654-3';
+let empleadoId;
+
+beforeAll(async () => {
+  await pool.query('DELETE FROM empleados WHERE rut = $1', [RUT_EMPLEADO]);
+  const res = await request(app).post('/api/empleados').send({
+    rut: RUT_EMPLEADO,
+    nombre: 'Lucas',
+    apellido: 'Morales',
+    fecha_ingreso: '2026-01-01',
+    cargo: 'Operario',
+    sueldo_base: 480000,
+  });
+  empleadoId = res.body.id;
+});
+
+afterAll(async () => {
+  await pool.query('DELETE FROM asistencia WHERE empleado_id = $1', [empleadoId]);
+  await pool.query('DELETE FROM empleados WHERE id = $1', [empleadoId]);
+  await pool.end();
+});
+
+describe('POST /api/asistencia/entrada', () => {
+  it('registra el marcaje de entrada del día', async () => {
+    const res = await request(app)
+      .post('/api/asistencia/entrada')
+      .send({ empleado_id: empleadoId, fecha: '2026-03-02', hora_entrada: '08:00' });
+    expect(res.status).toBe(201);
+    expect(res.body.hora_entrada).toBe('08:00:00');
+    expect(res.body.ausente).toBe(false);
+  });
+
+  it('rechaza un segundo marcaje de entrada para la misma fecha', async () => {
+    const res = await request(app)
+      .post('/api/asistencia/entrada')
+      .send({ empleado_id: empleadoId, fecha: '2026-03-02', hora_entrada: '08:05' });
+    expect(res.status).toBe(409);
+  });
+
+  it('rechaza si falta un campo obligatorio', async () => {
+    const res = await request(app)
+      .post('/api/asistencia/entrada')
+      .send({ empleado_id: empleadoId, fecha: '2026-03-03' });
+    expect(res.status).toBe(400);
+  });
+});
+
+describe('PUT /api/asistencia/:id/salida', () => {
+  it('CP-11: rechaza una hora de salida anterior a la de entrada', async () => {
+    const registro = await request(app).get(`/api/asistencia?empleado_id=${empleadoId}`);
+    const id = registro.body[0].id;
+
+    const res = await request(app).put(`/api/asistencia/${id}/salida`).send({ hora_salida: '07:00' });
+    expect(res.status).toBe(400);
+  });
+
+  it('marca la salida cuando la hora es posterior a la de entrada', async () => {
+    const registro = await request(app).get(`/api/asistencia?empleado_id=${empleadoId}`);
+    const id = registro.body[0].id;
+
+    const res = await request(app).put(`/api/asistencia/${id}/salida`).send({ hora_salida: '17:30' });
+    expect(res.status).toBe(200);
+    expect(res.body.hora_salida).toBe('17:30:00');
+  });
+});
+
+describe('POST /api/asistencia/ausencia', () => {
+  it('registra una ausencia con justificación', async () => {
+    const res = await request(app)
+      .post('/api/asistencia/ausencia')
+      .send({ empleado_id: empleadoId, fecha: '2026-03-04', justificacion: 'Licencia médica' });
+    expect(res.status).toBe(201);
+    expect(res.body.ausente).toBe(true);
+  });
+
+  it('rechaza una ausencia sin justificación', async () => {
+    const res = await request(app)
+      .post('/api/asistencia/ausencia')
+      .send({ empleado_id: empleadoId, fecha: '2026-03-05' });
+    expect(res.status).toBe(400);
+  });
+});
+
+describe('GET /api/asistencia', () => {
+  it('filtra por empleado_id', async () => {
+    const res = await request(app).get(`/api/asistencia?empleado_id=${empleadoId}`);
+    expect(res.status).toBe(200);
+    expect(res.body.length).toBeGreaterThanOrEqual(2);
+  });
+});

@@ -60,6 +60,7 @@ function Empleados() {
               <td>{emp.sueldo_base}</td>
               <td>
                 <Link to={`/empleados/${emp.id}/contratos`}>Contratos</Link>{' '}
+                <Link to={`/empleados/${emp.id}/asistencia`}>Asistencia</Link>{' '}
                 <button type="button" onClick={() => handleDesactivar(emp.id)}>
                   Desactivar
                 </button>

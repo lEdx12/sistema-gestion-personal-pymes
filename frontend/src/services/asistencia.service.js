@@ -1,0 +1,21 @@
+import api from './api';
+
+export async function listarAsistencia(empleadoId) {
+  const { data } = await api.get('/asistencia', { params: { empleado_id: empleadoId } });
+  return data;
+}
+
+export async function marcarEntrada(datos) {
+  const { data } = await api.post('/asistencia/entrada', datos);
+  return data;
+}
+
+export async function marcarSalida(id, hora_salida) {
+  const { data } = await api.put(`/asistencia/${id}/salida`, { hora_salida });
+  return data;
+}
+
+export async function registrarAusencia(datos) {
+  const { data } = await api.post('/asistencia/ausencia', datos);
+  return data;
+}
