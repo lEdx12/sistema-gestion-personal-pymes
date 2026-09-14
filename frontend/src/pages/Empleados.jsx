@@ -4,6 +4,7 @@ import EmpleadoForm from '../components/EmpleadoForm';
 import {
   listarEmpleados,
   crearEmpleado,
+  actualizarEmpleado,
   desactivarEmpleado,
   reactivarEmpleado,
 } from '../services/empleados.service';
@@ -12,6 +13,7 @@ function Empleados() {
   const [empleados, setEmpleados] = useState([]);
   const [error, setError] = useState(null);
   const [mostrarInactivos, setMostrarInactivos] = useState(false);
+  const [empleadoEditando, setEmpleadoEditando] = useState(null);
 
   const cargar = useCallback(async () => {
     const data = await listarEmpleados(mostrarInactivos);
@@ -22,16 +24,35 @@ function Empleados() {
     cargar();
   }, [cargar]);
 
-  async function handleCrear(form) {
+  async function handleGuardar(form) {
     setError(null);
+    const payload = { ...form, sueldo_base: Number(form.sueldo_base) };
     try {
-      await crearEmpleado({ ...form, sueldo_base: Number(form.sueldo_base) });
+      if (empleadoEditando) {
+        await actualizarEmpleado(empleadoEditando.id, payload);
+        setEmpleadoEditando(null);
+      } else {
+        await crearEmpleado(payload);
+      }
       await cargar();
       return true;
     } catch (err) {
-      setError(err.response?.data?.error || 'Error al registrar el empleado');
+      setError(
+        err.response?.data?.error ||
+          (empleadoEditando ? 'Error al actualizar el empleado' : 'Error al registrar el empleado'),
+      );
       return false;
     }
+  }
+
+  function handleEditar(emp) {
+    setError(null);
+    setEmpleadoEditando(emp);
+  }
+
+  function handleCancelarEdicion() {
+    setError(null);
+    setEmpleadoEditando(null);
   }
 
   async function handleDesactivar(id) {
@@ -48,7 +69,13 @@ function Empleados() {
     <div style={{ padding: '2rem', fontFamily: 'sans-serif' }}>
       <h1>Empleados</h1>
 
-      <EmpleadoForm onSubmit={handleCrear} error={error} />
+      <h2>{empleadoEditando ? `Editar empleado: ${empleadoEditando.rut}` : 'Registrar empleado'}</h2>
+      <EmpleadoForm
+        onSubmit={handleGuardar}
+        error={error}
+        empleado={empleadoEditando}
+        onCancelar={handleCancelarEdicion}
+      />
 
       <label style={{ display: 'block', marginTop: '1rem' }}>
         <input
@@ -81,6 +108,9 @@ function Empleados() {
               <td>{emp.sueldo_base}</td>
               <td>{emp.activo ? 'Activo' : 'Inactivo'}</td>
               <td>
+                <button type="button" onClick={() => handleEditar(emp)}>
+                  Editar
+                </button>{' '}
                 <Link to={`/empleados/${emp.id}/contratos`}>Contratos</Link>{' '}
                 <Link to={`/empleados/${emp.id}/asistencia`}>Asistencia</Link>{' '}
                 {emp.activo ? (

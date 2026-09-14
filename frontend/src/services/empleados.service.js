@@ -10,6 +10,11 @@ export async function crearEmpleado(empleado) {
   return data;
 }
 
+export async function actualizarEmpleado(id, empleado) {
+  const { data } = await api.put(`/empleados/${id}`, empleado);
+  return data;
+}
+
 export async function desactivarEmpleado(id) {
   const { data } = await api.put(`/empleados/${id}/desactivar`);
   return data;
