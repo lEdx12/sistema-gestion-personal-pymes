@@ -45,6 +45,21 @@ en `src/utils/rut.js`, reglas de negocio en `src/services/empleados.service.js`,
 datos en `src/models/empleado.model.js`. Pruebas en `tests/rut.test.js` y
 `tests/empleados.test.js` (incluye CP-03: RUT duplicado).
 
+| Método | Ruta | Body | Respuesta |
+|--------|------|------|-----------|
+| GET | `/api/contratos` | — (query opcional `?empleado_id=N`) | `200` lista de contratos |
+| GET | `/api/contratos/:id` | — | `200` contrato / `404` |
+| POST | `/api/contratos` | `{ empleado_id, tipo, fecha_inicio, fecha_termino?, documento_url? }` | `201` creado / `400` validación / `404` empleado no existe / `409` empleado ya tiene contrato activo |
+| PUT | `/api/contratos/:id` | mismos campos que POST (sin `empleado_id`) | `200` actualizado / `400` / `404` |
+| PUT | `/api/contratos/:id/renovar` | `{ tipo, fecha_inicio, fecha_termino? }` del nuevo contrato | `201` nuevo contrato activo (cierra el anterior, transacción atómica) / `400` / `404` |
+
+RF-04 (gestión de contratos): `tipo` debe ser `indefinido` o `plazo_fijo`; si es
+`plazo_fijo`, `fecha_termino` es obligatoria y debe ser posterior a `fecha_inicio`. Un
+empleado solo puede tener un contrato activo a la vez — para reemplazarlo se usa
+`renovar`, que cierra el contrato vigente (`activo=false`, `fecha_termino` = inicio del
+nuevo) y crea el siguiente dentro de la misma transacción de BD
+(`src/services/contratos.service.js`). Pruebas en `tests/contratos.test.js`.
+
 Cada nuevo RF debe agregar su tabla de endpoints aquí (método, ruta, body esperado,
 respuesta) al completarse.
 

@@ -3,6 +3,7 @@ const cors = require('cors');
 const morgan = require('morgan');
 const mockAuth = require('./middleware/mockAuth');
 const empleadosRoutes = require('./routes/empleados.routes');
+const contratosRoutes = require('./routes/contratos.routes');
 
 const app = express();
 
@@ -16,6 +17,7 @@ app.get('/api/health', (req, res) => {
 });
 
 app.use('/api/empleados', empleadosRoutes);
+app.use('/api/contratos', contratosRoutes);
 
 app.use((req, res) => {
   res.status(404).json({ error: 'Ruta no encontrada' });
