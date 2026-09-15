@@ -11,6 +11,7 @@ function valoresPorDefecto() {
     apellido: '',
     fecha_ingreso: hoyISO(),
     fecha_nacimiento: '',
+    direccion: '',
     cargo: '',
     sueldo_base: '',
     email: '',
@@ -27,6 +28,7 @@ function valoresDesdeEmpleado(empleado) {
     // empleado y se conserva sin cambios al editar.
     fecha_ingreso: empleado.fecha_ingreso ? empleado.fecha_ingreso.slice(0, 10) : hoyISO(),
     fecha_nacimiento: empleado.fecha_nacimiento ? empleado.fecha_nacimiento.slice(0, 10) : '',
+    direccion: empleado.direccion || '',
     cargo: empleado.cargo || '',
     sueldo_base: empleado.sueldo_base || '',
     email: empleado.email || '',
@@ -84,6 +86,10 @@ function EmpleadoForm({ onSubmit, error, empleado, onCancelar }) {
           value={form.fecha_nacimiento}
           onChange={handleChange}
         />
+      </label>
+      <label style={estiloCampo}>
+        Dirección
+        <input name="direccion" value={form.direccion} onChange={handleChange} />
       </label>
       <label style={estiloCampo}>
         Cargo
