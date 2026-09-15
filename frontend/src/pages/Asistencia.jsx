@@ -84,16 +84,16 @@ function Asistencia() {
   }
 
   return (
-    <div style={{ padding: '2rem', fontFamily: 'sans-serif' }}>
+    <div>
       <p>
-        <Link to="/empleados">&larr; Volver a empleados</Link>
+        <Link to="/empleados">← Volver a empleados</Link>
       </p>
       <h1>Asistencia del empleado #{empleadoId}</h1>
 
-      {error && <p style={{ color: 'red' }}>{error}</p>}
+      {error && <p className="field-error">{error}</p>}
 
-      <div style={{ display: 'flex', gap: '2rem', flexWrap: 'wrap' }}>
-        <form onSubmit={handleEntrada} style={{ display: 'grid', gap: '0.5rem', maxWidth: 250 }}>
+      <div className="toolbar">
+        <form onSubmit={handleEntrada} className="card" style={{ display: 'grid', gap: '0.5rem', flex: '1 1 220px' }}>
           <h2>Marcar entrada</h2>
           <input
             type="date"
@@ -110,7 +110,7 @@ function Asistencia() {
           <button type="submit">Marcar entrada</button>
         </form>
 
-        <form onSubmit={handleAusencia} style={{ display: 'grid', gap: '0.5rem', maxWidth: 250 }}>
+        <form onSubmit={handleAusencia} className="card" style={{ display: 'grid', gap: '0.5rem', flex: '1 1 220px' }}>
           <h2>Registrar ausencia</h2>
           <input
             type="date"
@@ -128,7 +128,7 @@ function Asistencia() {
           <button type="submit">Registrar ausencia</button>
         </form>
 
-        <form onSubmit={handleResumen} style={{ display: 'grid', gap: '0.5rem', maxWidth: 250 }}>
+        <form onSubmit={handleResumen} className="card" style={{ display: 'grid', gap: '0.5rem', flex: '1 1 220px' }}>
           <h2>Resumen semanal</h2>
           <input
             type="date"
@@ -144,7 +144,7 @@ function Asistencia() {
           />
           <button type="submit">Calcular</button>
           {resumen && (
-            <p>
+            <p style={{ fontSize: '0.85rem' }}>
               Total: {resumen.totalHoras} h — Sobrejornada: {resumen.horasSobrejornada} h (jornada
               máx.: {resumen.jornadaMaxHoras} h)
               <br />
@@ -155,7 +155,7 @@ function Asistencia() {
         </form>
       </div>
 
-      <table style={{ marginTop: '2rem', borderCollapse: 'collapse', width: '100%' }}>
+      <table>
         <thead>
           <tr>
             <th>Fecha</th>

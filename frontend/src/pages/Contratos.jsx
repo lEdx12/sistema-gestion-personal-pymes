@@ -55,25 +55,27 @@ function Contratos() {
   }
 
   return (
-    <div style={{ padding: '2rem', fontFamily: 'sans-serif' }}>
+    <div>
       <p>
-        <Link to="/empleados">&larr; Volver a empleados</Link>
+        <Link to="/empleados">← Volver a empleados</Link>
       </p>
       <h1>Contratos del empleado #{empleadoId}</h1>
 
-      {contratoActivo ? (
-        <>
-          <h2>Renovar contrato activo</h2>
-          <ContratoForm onSubmit={handleRenovar} error={error} label="Renovar contrato" />
-        </>
-      ) : (
-        <>
-          <h2>Crear primer contrato</h2>
-          <ContratoForm onSubmit={handleCrear} error={error} label="Crear contrato" />
-        </>
-      )}
+      <div className="card" style={{ marginBottom: '1.5rem' }}>
+        {contratoActivo ? (
+          <>
+            <h2>Renovar contrato activo</h2>
+            <ContratoForm onSubmit={handleRenovar} error={error} label="Renovar contrato" />
+          </>
+        ) : (
+          <>
+            <h2>Crear primer contrato</h2>
+            <ContratoForm onSubmit={handleCrear} error={error} label="Crear contrato" />
+          </>
+        )}
+      </div>
 
-      <table style={{ marginTop: '2rem', borderCollapse: 'collapse', width: '100%' }}>
+      <table>
         <thead>
           <tr>
             <th>Tipo</th>
@@ -89,7 +91,11 @@ function Contratos() {
               <td>{c.tipo}</td>
               <td>{c.fecha_inicio?.slice(0, 10)}</td>
               <td>{c.fecha_termino?.slice(0, 10) || '—'}</td>
-              <td>{c.activo ? 'Sí' : 'No'}</td>
+              <td>
+                <span className={`status-badge ${c.activo ? 'ok' : 'off'}`}>
+                  {c.activo ? 'Sí' : 'No'}
+                </span>
+              </td>
               <td>
                 <ContratoDocumento contrato={c} onSubirDocumento={handleSubirDocumento} />
               </td>

@@ -66,27 +66,30 @@ function Empleados() {
   }
 
   return (
-    <div style={{ padding: '2rem', fontFamily: 'sans-serif' }}>
+    <div>
       <h1>Empleados</h1>
 
-      <h2>{empleadoEditando ? `Editar empleado: ${empleadoEditando.rut}` : 'Registrar empleado'}</h2>
-      <EmpleadoForm
-        onSubmit={handleGuardar}
-        error={error}
-        empleado={empleadoEditando}
-        onCancelar={handleCancelarEdicion}
-      />
+      <div className="card" style={{ marginBottom: '1.5rem' }}>
+        <h2>{empleadoEditando ? `Editar empleado: ${empleadoEditando.rut}` : 'Registrar empleado'}</h2>
+        <EmpleadoForm
+          onSubmit={handleGuardar}
+          error={error}
+          empleado={empleadoEditando}
+          onCancelar={handleCancelarEdicion}
+        />
+      </div>
 
-      <label style={{ display: 'block', marginTop: '1rem' }}>
+      <label style={{ display: 'block', marginBottom: '0.75rem' }}>
         <input
           type="checkbox"
           checked={mostrarInactivos}
           onChange={(e) => setMostrarInactivos(e.target.checked)}
-        />{' '}
+          style={{ width: 'auto', marginRight: '0.4rem' }}
+        />
         Mostrar empleados inactivos
       </label>
 
-      <table style={{ marginTop: '1rem', borderCollapse: 'collapse', width: '100%' }}>
+      <table>
         <thead>
           <tr>
             <th>RUT</th>
@@ -106,7 +109,11 @@ function Empleados() {
               </td>
               <td>{emp.cargo}</td>
               <td>{emp.sueldo_base}</td>
-              <td>{emp.activo ? 'Activo' : 'Inactivo'}</td>
+              <td>
+                <span className={`status-badge ${emp.activo ? 'ok' : 'off'}`}>
+                  {emp.activo ? 'Activo' : 'Inactivo'}
+                </span>
+              </td>
               <td>
                 <button type="button" onClick={() => handleEditar(emp)}>
                   Editar

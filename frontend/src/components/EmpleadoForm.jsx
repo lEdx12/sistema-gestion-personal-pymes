@@ -113,7 +113,7 @@ function EmpleadoForm({ onSubmit, error, empleado, onCancelar }) {
         Teléfono
         <input name="telefono" value={form.telefono} onChange={handleChange} />
       </label>
-      {error && <p style={{ color: 'red' }}>{error}</p>}
+      {error && <p className="field-error">{error}</p>}
       <div style={{ display: 'flex', gap: '0.5rem' }}>
         <button type="submit">{esEdicion ? 'Guardar cambios' : 'Registrar empleado'}</button>
         {esEdicion && (

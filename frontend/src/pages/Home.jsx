@@ -14,9 +14,9 @@ function Home() {
   }, []);
 
   return (
-    <div style={{ padding: '2rem', fontFamily: 'sans-serif' }}>
+    <div className="card">
       <h1>Sistema de Gestión de Personal para PyMES</h1>
-      {error && <p style={{ color: 'red' }}>Error conectando al backend: {error}</p>}
+      {error && <p className="field-error">Error conectando al backend: {error}</p>}
       {health && (
         <p>
           Backend conectado. Usuario de prueba: <strong>{health.user.nombre}</strong> (
@@ -25,7 +25,7 @@ function Home() {
       )}
       {!health && !error && <p>Conectando al backend...</p>}
       <p>
-        <Link to="/empleados">Ir a Empleados</Link>
+        <Link to="/empleados">Ir a Empleados →</Link>
       </p>
     </div>
   );

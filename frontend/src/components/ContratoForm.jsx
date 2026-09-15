@@ -1,6 +1,7 @@
 import { useState } from 'react';
 
 const VACIO = { tipo: 'indefinido', fecha_inicio: '', fecha_termino: '' };
+const estiloCampo = { display: 'flex', flexDirection: 'column', fontSize: '0.85em', gap: '0.15rem' };
 
 function ContratoForm({ onSubmit, error, label }) {
   const [form, setForm] = useState(VACIO);
@@ -17,21 +18,30 @@ function ContratoForm({ onSubmit, error, label }) {
 
   return (
     <form onSubmit={handleSubmit} style={{ display: 'grid', gap: '0.5rem', maxWidth: 350 }}>
-      <select name="tipo" value={form.tipo} onChange={handleChange}>
-        <option value="indefinido">Indefinido</option>
-        <option value="plazo_fijo">Plazo fijo</option>
-      </select>
-      <input name="fecha_inicio" type="date" value={form.fecha_inicio} onChange={handleChange} required />
+      <label style={estiloCampo}>
+        Tipo de contrato
+        <select name="tipo" value={form.tipo} onChange={handleChange}>
+          <option value="indefinido">Indefinido</option>
+          <option value="plazo_fijo">Plazo fijo</option>
+        </select>
+      </label>
+      <label style={estiloCampo}>
+        Fecha de inicio
+        <input name="fecha_inicio" type="date" value={form.fecha_inicio} onChange={handleChange} required />
+      </label>
       {form.tipo === 'plazo_fijo' && (
-        <input
-          name="fecha_termino"
-          type="date"
-          value={form.fecha_termino}
-          onChange={handleChange}
-          required
-        />
+        <label style={estiloCampo}>
+          Fecha de término
+          <input
+            name="fecha_termino"
+            type="date"
+            value={form.fecha_termino}
+            onChange={handleChange}
+            required
+          />
+        </label>
       )}
-      {error && <p style={{ color: 'red' }}>{error}</p>}
+      {error && <p className="field-error">{error}</p>}
       <button type="submit">{label}</button>
     </form>
   );

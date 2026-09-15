@@ -38,7 +38,7 @@ function ContratoDocumento({ contrato, onSubirDocumento }) {
           {contrato.documento_url ? 'Reemplazar' : 'Subir'}
         </button>
       </div>
-      {error && <span style={{ color: 'red', fontSize: '0.85em' }}>{error}</span>}
+      {error && <span className="field-error" style={{ fontSize: '0.85em' }}>{error}</span>}
     </div>
   );
 }

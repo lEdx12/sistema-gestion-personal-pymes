@@ -90,7 +90,7 @@ function AsistenciaRow({ registro, onMarcarSalida, onActualizar }) {
               Cancelar
             </button>
           </div>
-          {error && <div style={{ color: 'red', fontSize: '0.85em' }}>{error}</div>}
+          {error && <div className="field-error" style={{ fontSize: '0.85em' }}>{error}</div>}
         </td>
       </tr>
     );
@@ -102,7 +102,11 @@ function AsistenciaRow({ registro, onMarcarSalida, onActualizar }) {
       <td>{registro.ausente ? '—' : registro.hora_entrada?.slice(0, 5) || '—'}</td>
       <td>{registro.ausente ? '—' : registro.hora_salida?.slice(0, 5) || '—'}</td>
       <td>{registro.horas_trabajadas ?? '—'}</td>
-      <td>{registro.ausente ? 'Sí' : 'No'}</td>
+      <td>
+        <span className={`status-badge ${registro.ausente ? 'off' : 'ok'}`}>
+          {registro.ausente ? 'Sí' : 'No'}
+        </span>
+      </td>
       <td>{registro.justificacion || ''}</td>
       <td>
         {puedeMarcarSalida && (
