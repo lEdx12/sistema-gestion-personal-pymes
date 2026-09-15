@@ -10,6 +10,7 @@ function valoresPorDefecto() {
     nombre: '',
     apellido: '',
     fecha_ingreso: hoyISO(),
+    fecha_nacimiento: '',
     cargo: '',
     sueldo_base: '',
     email: '',
@@ -22,7 +23,10 @@ function valoresDesdeEmpleado(empleado) {
     rut: empleado.rut || '',
     nombre: empleado.nombre || '',
     apellido: empleado.apellido || '',
-    fecha_ingreso: empleado.fecha_ingreso ? empleado.fecha_ingreso.slice(0, 10) : '',
+    // La fecha de ingreso no se muestra en el formulario: se fija al crear el
+    // empleado y se conserva sin cambios al editar.
+    fecha_ingreso: empleado.fecha_ingreso ? empleado.fecha_ingreso.slice(0, 10) : hoyISO(),
+    fecha_nacimiento: empleado.fecha_nacimiento ? empleado.fecha_nacimiento.slice(0, 10) : '',
     cargo: empleado.cargo || '',
     sueldo_base: empleado.sueldo_base || '',
     email: empleado.email || '',
@@ -73,13 +77,12 @@ function EmpleadoForm({ onSubmit, error, empleado, onCancelar }) {
         <input name="apellido" value={form.apellido} onChange={handleChange} required />
       </label>
       <label style={estiloCampo}>
-        Fecha de ingreso
+        Fecha de nacimiento
         <input
-          name="fecha_ingreso"
+          name="fecha_nacimiento"
           type="date"
-          value={form.fecha_ingreso}
+          value={form.fecha_nacimiento}
           onChange={handleChange}
-          required
         />
       </label>
       <label style={estiloCampo}>

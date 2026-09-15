@@ -47,6 +47,13 @@ datos en `src/models/empleado.model.js`. Un empleado desactivado puede reactivar
 `PUT /api/empleados/:id/reactivar` (vuelve a aparecer en el listado por defecto). Pruebas
 en `tests/rut.test.js` y `tests/empleados.test.js` (incluye CP-03: RUT duplicado).
 
+**Fecha de ingreso vs. fecha de nacimiento (actualizado):** el formulario del frontend ya
+no pide ni muestra `fecha_ingreso` — se fija automáticamente a la fecha del computador
+donde se registra el empleado (y se conserva sin cambios al editar). El campo de fecha
+visible en el formulario es `fecha_nacimiento` (opcional). El backend no cambió: ambas
+columnas ya existían y `actualizarEmpleado` sigue exigiendo `fecha_ingreso`, solo que
+ahora el frontend la completa por sí mismo en vez de pedirla.
+
 | Método | Ruta | Body | Respuesta |
 |--------|------|------|-----------|
 | GET | `/api/contratos` | — (query opcional `?empleado_id=N`) | `200` lista de contratos |
