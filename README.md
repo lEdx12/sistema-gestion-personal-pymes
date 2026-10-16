@@ -19,9 +19,10 @@ localmente, base `personal_pymes`, usuario `postgres`).
 ```bash
 # Backend
 cd backend
-cp .env.example .env   # revisar credenciales
+cp .env.example .env   # revisar credenciales y ADMIN_EMAIL/ADMIN_PASSWORD
 npm install
 npm run migrate
+npm run seed:admin      # crea el usuario administrador (RF-01)
 npm run dev             # http://localhost:4000
 
 # Frontend (otra terminal)
@@ -32,7 +33,9 @@ npm run dev             # http://localhost:5173
 ```
 
 La página de inicio del frontend llama a `GET /api/health` para confirmar que ambos
-servicios se comunican correctamente.
+servicios se comunican correctamente. Desde RF-01 (Sprint 2), el resto de la app exige
+iniciar sesión en `/login` con las credenciales de `ADMIN_EMAIL`/`ADMIN_PASSWORD` — ver
+`backend/README.md` sección "Autenticación".
 
 ## Metodología
 

@@ -52,7 +52,7 @@ async function calcularHorasSobrejornadaDelPeriodo(empleadoId, periodo) {
  * orquestando el cálculo de horas extra (RF-07/RF-08) y las cotizaciones/gratificación
  * legales. Un período solo puede liquidarse una vez por empleado.
  */
-async function generarLiquidacion({ empleado_id, periodo }) {
+async function generarLiquidacion({ empleado_id, periodo, generado_por }) {
   if (!empleado_id || !periodo) {
     throw new ServiceError(400, 'Los campos "empleado_id" y "periodo" son obligatorios');
   }
@@ -89,8 +89,7 @@ async function generarLiquidacion({ empleado_id, periodo }) {
 
   return liquidacionModel.create({
     empleado_id,
-    // TODO: usar el id del usuario autenticado cuando RF-01 esté implementado.
-    generado_por: null,
+    generado_por,
     periodo,
     sueldo_base: sueldoBase,
     horas_extra_monto: montoHorasExtra,

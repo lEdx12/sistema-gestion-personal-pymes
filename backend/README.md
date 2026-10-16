@@ -5,9 +5,10 @@ Node.js + Express + PostgreSQL (vía `pg`, sin ORM — ver decisión abajo).
 ## Setup
 
 ```bash
-cp .env.example .env   # ajustar credenciales de PostgreSQL
+cp .env.example .env   # ajustar credenciales de PostgreSQL y ADMIN_*
 npm install
 npm run migrate        # aplica backend/migrations/*.sql
+npm run seed:admin     # crea el usuario administrador inicial (RF-01)
 npm run dev
 ```
 
@@ -22,18 +23,36 @@ evita una dependencia adicional no justificada. Las migraciones son archivos `.s
 planos en `/migrations`, aplicados y registrados por `src/config/runMigrations.js`
 (tabla `schema_migrations`).
 
-## Autenticación (Sprint 1)
+## Autenticación (RF-01, Sprint 2)
 
-Mientras no se implemente RF-01, todas las rutas pasan por
-`src/middleware/mockAuth.js`, que inyecta un usuario administrador de prueba
-(`req.user = { id: 0, rol: 'administrador' }`). Este middleware se retira al
-completar RF-01 en el Sprint 2.
+El `mockAuth` del Sprint 1 fue reemplazado por autenticación JWT real
+(`src/middleware/auth.js`). **Toda ruta bajo `/api/` exige un header
+`Authorization: Bearer <token>` válido, excepto `/api/health` y `/api/auth/*`.**
+No hay restricción por rol todavía — cualquier usuario autenticado (`administrador` o
+`gerente`) puede usar cualquier endpoint; eso es RF-02 (Sprint 3).
+
+Como RF-14 (CRUD de usuarios) tampoco existe todavía, no hay forma de crear una cuenta
+desde la UI. El primer usuario administrador se crea con:
+
+```bash
+# Definir ADMIN_EMAIL / ADMIN_NOMBRE / ADMIN_PASSWORD en backend/.env primero
+npm run seed:admin
+```
+
+Es idempotente — se puede volver a ejecutar para rotar la contraseña del admin. El
+`password_hash` se calcula con `bcrypt` (nunca se guarda ni se devuelve la contraseña
+en texto plano).
+
+| Método | Ruta | Body | Respuesta |
+|--------|------|------|-----------|
+| POST | `/api/auth/login` | `{ email, password }` | `200` `{ token, usuario }` / `400` faltan campos / `401` credenciales inválidas o usuario inactivo |
+| POST | `/api/auth/logout` | — | `200` — JWT no tiene estado en el servidor; "cerrar sesión" es que el cliente descarte el token. Este endpoint existe por simetría con `/login`. |
 
 ## Endpoints
 
 | Método | Ruta | Body | Respuesta |
 |--------|------|------|-----------|
-| GET | `/api/health` | — | `{ status: 'ok', user }` — verifica que el backend está arriba y expone el usuario mock |
+| GET | `/api/health` | — | `{ status: 'ok' }` — único endpoint además de `/api/auth/*` que no exige token |
 | GET | `/api/empleados` | — (query opcional `?incluirInactivos=true`) | `200` lista de empleados (activos por defecto) |
 | GET | `/api/empleados/:id` | — | `200` empleado / `404` si no existe |
 | POST | `/api/empleados` | `{ rut, nombre, apellido, fecha_ingreso, sueldo_base, fecha_nacimiento?, direccion?, telefono?, email?, cargo? }` | `201` empleado creado / `400` validación (campo obligatorio o RUT inválido) / `409` "Empleado ya registrado" si el RUT ya existe |
@@ -139,7 +158,8 @@ cotizaciones (AFP, salud, cesantía — esta última según el tipo de contrato:
 trabajador con contrato a plazo fijo no cotiza cesantía). Todos los porcentajes/topes
 son configurables vía `.env` y están marcados `// TODO: validar valor legal vigente`
 — son valores de referencia, no específicos por AFP/Isapre de cada trabajador.
-`generado_por` queda en `null` hasta que RF-01 (autenticación real) esté implementado.
+`generado_por` guarda el id del usuario autenticado que generó la liquidación (RF-01,
+implementado en Sprint 2 — antes quedaba en `null`).
 Un empleado/período solo puede liquidarse una vez (constraint `UNIQUE`). Pruebas en
 `tests/liquidacionCalculo.test.js` y `tests/liquidaciones.test.js` (incluye CP-06:
 sueldo base $500.000 sin horas extra → gratificación $125.000, AFP $62.500, salud

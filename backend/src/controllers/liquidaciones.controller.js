@@ -32,7 +32,10 @@ async function obtener(req, res) {
 
 async function generar(req, res) {
   try {
-    const liquidacion = await liquidacionesService.generarLiquidacion(req.body);
+    const liquidacion = await liquidacionesService.generarLiquidacion({
+      ...req.body,
+      generado_por: req.user.id,
+    });
     res.status(201).json(liquidacion);
   } catch (err) {
     manejarError(res, err);

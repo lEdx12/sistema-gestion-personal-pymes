@@ -1,6 +1,7 @@
 const request = require('supertest');
 const app = require('../src/app');
 const pool = require('../src/config/db');
+const { obtenerAuthHeader } = require('./helpers/auth');
 
 const RUT_PRUEBA = '12.345.678-5';
 const RUT_PRUEBA_NORMALIZADO = '12345678-5';
@@ -14,7 +15,10 @@ const empleadoValido = {
   sueldo_base: 500000,
 };
 
+let authHeader;
+
 beforeAll(async () => {
+  authHeader = await obtenerAuthHeader();
   await pool.query('DELETE FROM empleados WHERE rut = $1', [RUT_PRUEBA_NORMALIZADO]);
 });
 
@@ -25,14 +29,20 @@ afterAll(async () => {
 
 describe('POST /api/empleados', () => {
   it('crea un empleado con datos válidos', async () => {
-    const res = await request(app).post('/api/empleados').send(empleadoValido);
+    const res = await request(app)
+      .post('/api/empleados')
+      .set('Authorization', authHeader)
+      .send(empleadoValido);
     expect(res.status).toBe(201);
     expect(res.body.rut).toBe(RUT_PRUEBA_NORMALIZADO);
     expect(res.body.activo).toBe(true);
   });
 
   it('CP-03: rechaza un RUT duplicado con "Empleado ya registrado"', async () => {
-    const res = await request(app).post('/api/empleados').send(empleadoValido);
+    const res = await request(app)
+      .post('/api/empleados')
+      .set('Authorization', authHeader)
+      .send(empleadoValido);
     expect(res.status).toBe(409);
     expect(res.body.error).toBe('Empleado ya registrado');
   });
@@ -40,6 +50,7 @@ describe('POST /api/empleados', () => {
   it('rechaza un RUT inválido', async () => {
     const res = await request(app)
       .post('/api/empleados')
+      .set('Authorization', authHeader)
       .send({ ...empleadoValido, rut: '11.111.111-2' });
     expect(res.status).toBe(400);
   });
@@ -48,6 +59,7 @@ describe('POST /api/empleados', () => {
     const { nombre: _nombre, ...sinNombre } = empleadoValido;
     const res = await request(app)
       .post('/api/empleados')
+      .set('Authorization', authHeader)
       .send({ ...sinNombre, rut: '9.418.574-2' });
     expect(res.status).toBe(400);
   });
@@ -55,7 +67,7 @@ describe('POST /api/empleados', () => {
 
 describe('GET /api/empleados', () => {
   it('lista solo empleados activos por defecto', async () => {
-    const res = await request(app).get('/api/empleados');
+    const res = await request(app).get('/api/empleados').set('Authorization', authHeader);
     expect(res.status).toBe(200);
     expect(res.body.find((e) => e.rut === RUT_PRUEBA_NORMALIZADO)).toBeTruthy();
   });
@@ -63,26 +75,32 @@ describe('GET /api/empleados', () => {
 
 describe('PUT /api/empleados/:id/desactivar', () => {
   it('desactiva un empleado existente', async () => {
-    const creado = await request(app).post('/api/empleados').send({
-      ...empleadoValido,
-      rut: '7.594.890-5',
-    });
-    const res = await request(app).put(`/api/empleados/${creado.body.id}/desactivar`);
+    const creado = await request(app)
+      .post('/api/empleados')
+      .set('Authorization', authHeader)
+      .send({ ...empleadoValido, rut: '7.594.890-5' });
+    const res = await request(app)
+      .put(`/api/empleados/${creado.body.id}/desactivar`)
+      .set('Authorization', authHeader);
     expect(res.status).toBe(200);
     expect(res.body.activo).toBe(false);
 
-    const reactivado = await request(app).put(`/api/empleados/${creado.body.id}/reactivar`);
+    const reactivado = await request(app)
+      .put(`/api/empleados/${creado.body.id}/reactivar`)
+      .set('Authorization', authHeader);
     expect(reactivado.status).toBe(200);
     expect(reactivado.body.activo).toBe(true);
 
-    const listado = await request(app).get('/api/empleados');
+    const listado = await request(app).get('/api/empleados').set('Authorization', authHeader);
     expect(listado.body.find((e) => e.rut === '7594890-5')).toBeTruthy();
 
     await pool.query('DELETE FROM empleados WHERE rut = $1', ['7594890-5']);
   });
 
   it('rechaza reactivar un empleado inexistente', async () => {
-    const res = await request(app).put('/api/empleados/999999/reactivar');
+    const res = await request(app)
+      .put('/api/empleados/999999/reactivar')
+      .set('Authorization', authHeader);
     expect(res.status).toBe(404);
   });
 });
