@@ -124,10 +124,50 @@ async function obtenerPdfLiquidacion(id) {
   return { ruta, nombre: nombreArchivo(liquidacion) };
 }
 
+/**
+ * RF-13: historial de remuneraciones de un empleado, con filtro opcional de rango de
+ * períodos ("YYYY-MM"), más un resumen agregado (cantidad y promedio del líquido
+ * pagado en el rango).
+ */
+async function obtenerHistorialRemuneraciones({ empleadoId, desde, hasta }) {
+  if (!empleadoId) {
+    throw new ServiceError(400, 'El parámetro "empleado_id" es obligatorio');
+  }
+  if (desde && !esPeriodoValido(desde)) {
+    throw new ServiceError(400, 'El parámetro "desde" debe tener el formato "YYYY-MM"');
+  }
+  if (hasta && !esPeriodoValido(hasta)) {
+    throw new ServiceError(400, 'El parámetro "hasta" debe tener el formato "YYYY-MM"');
+  }
+  if (desde && hasta && desde > hasta) {
+    throw new ServiceError(400, 'El parámetro "desde" no puede ser posterior a "hasta"');
+  }
+
+  const empleado = await empleadoModel.findById(empleadoId);
+  if (!empleado) throw new ServiceError(404, 'Empleado no encontrado');
+
+  const liquidaciones = await liquidacionModel.findAll({ empleadoId, desde, hasta });
+
+  const cantidad = liquidaciones.length;
+  const totalLiquido = liquidaciones.reduce((acc, l) => acc + Number(l.liquido_pagar), 0);
+  const promedioLiquido = cantidad > 0 ? Math.round(totalLiquido / cantidad) : 0;
+
+  return {
+    empleado: { id: empleado.id, nombre: empleado.nombre, apellido: empleado.apellido, rut: empleado.rut },
+    desde: desde || null,
+    hasta: hasta || null,
+    cantidad,
+    totalLiquido: Math.round(totalLiquido),
+    promedioLiquido,
+    liquidaciones,
+  };
+}
+
 module.exports = {
   ServiceError,
   listarLiquidaciones,
   obtenerLiquidacion,
   generarLiquidacion,
   obtenerPdfLiquidacion,
+  obtenerHistorialRemuneraciones,
 };

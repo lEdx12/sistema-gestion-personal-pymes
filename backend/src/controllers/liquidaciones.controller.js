@@ -48,4 +48,18 @@ async function descargarPdf(req, res) {
   }
 }
 
-module.exports = { listar, obtener, generar, descargarPdf };
+async function historial(req, res) {
+  try {
+    const { empleado_id, desde, hasta } = req.query;
+    const resultado = await liquidacionesService.obtenerHistorialRemuneraciones({
+      empleadoId: empleado_id,
+      desde,
+      hasta,
+    });
+    res.json(resultado);
+  } catch (err) {
+    manejarError(res, err);
+  }
+}
+
+module.exports = { listar, obtener, generar, descargarPdf, historial };

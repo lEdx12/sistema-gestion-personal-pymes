@@ -159,6 +159,20 @@ RF-11). Pruebas en `tests/liquidaciones.test.js`.
 
 | Método | Ruta | Query | Respuesta |
 |--------|------|-------|-----------|
+| GET | `/api/liquidaciones/historial` | `empleado_id` (obligatorio) + `desde`/`hasta` opcionales (`YYYY-MM`) | `200` `{ empleado, desde, hasta, cantidad, totalLiquido, promedioLiquido, liquidaciones }` / `400` / `404` |
+
+RF-13 (historial de remuneraciones): filtra por rango de períodos sobre la misma tabla
+`liquidaciones` — como `periodo` es `VARCHAR` con formato fijo `YYYY-MM`, la comparación
+lexicográfica (`periodo >= $desde AND periodo <= $hasta`) equivale a la cronológica, sin
+necesidad de castear a fecha. `GET /api/liquidaciones` (RF-09) también acepta `desde`/
+`hasta` ahora, para reuso interno; `/historial` es el endpoint pensado para esta
+pantalla, que además agrega `cantidad`, `totalLiquido` y `promedioLiquido` del rango.
+Frontend: la página de liquidaciones de cada empleado ahora tiene un formulario
+"Filtrar historial por fecha" (Desde/Hasta) además del de generar, y muestra el
+resumen agregado sobre la tabla. Pruebas en `tests/historialRemuneraciones.test.js`.
+
+| Método | Ruta | Query | Respuesta |
+|--------|------|-------|-----------|
 | GET | `/api/asistencia/reporte-mensual` | `periodo` (obligatorio, `YYYY-MM`) + `empleado_id` opcional | `200` reporte individual (con `empleado_id`) o consolidado (sin él) / `400` / `404` |
 
 RF-12 (reporte de asistencia mensual): un mismo endpoint cubre los dos casos del RF.

@@ -4,6 +4,7 @@ const controller = require('../controllers/liquidaciones.controller');
 const router = express.Router();
 
 router.get('/', controller.listar);
+router.get('/historial', controller.historial);
 router.get('/:id', controller.obtener);
 router.get('/:id/pdf', controller.descargarPdf);
 router.post('/', controller.generar);

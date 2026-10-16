@@ -1,0 +1,102 @@
+const request = require('supertest');
+const app = require('../src/app');
+const pool = require('../src/config/db');
+
+const RUT_EMPLEADO = '9418574-2';
+let empleadoId;
+
+beforeAll(async () => {
+  await pool.query('DELETE FROM empleados WHERE rut = $1', [RUT_EMPLEADO]);
+  const res = await request(app).post('/api/empleados').send({
+    rut: RUT_EMPLEADO,
+    nombre: 'Pilar',
+    apellido: 'Reyes',
+    fecha_ingreso: '2025-01-01',
+    cargo: 'Diseñadora',
+    sueldo_base: 500000,
+  });
+  empleadoId = res.body.id;
+
+  await request(app)
+    .post('/api/contratos')
+    .send({ empleado_id: empleadoId, tipo: 'indefinido', fecha_inicio: '2025-01-01' });
+
+  for (const periodo of ['2026-01', '2026-02', '2026-03', '2026-04']) {
+    await request(app).post('/api/liquidaciones').send({ empleado_id: empleadoId, periodo });
+  }
+});
+
+afterAll(async () => {
+  await pool.query('DELETE FROM liquidaciones WHERE empleado_id = $1', [empleadoId]);
+  await pool.query('DELETE FROM contratos WHERE empleado_id = $1', [empleadoId]);
+  await pool.query('DELETE FROM empleados WHERE id = $1', [empleadoId]);
+  await pool.end();
+});
+
+describe('GET /api/liquidaciones/historial', () => {
+  it('sin filtro de fechas devuelve todo el historial del empleado', async () => {
+    const res = await request(app)
+      .get('/api/liquidaciones/historial')
+      .query({ empleado_id: empleadoId });
+
+    expect(res.status).toBe(200);
+    expect(res.body.empleado.rut).toBe(RUT_EMPLEADO);
+    expect(res.body.cantidad).toBe(4);
+    expect(res.body.liquidaciones).toHaveLength(4);
+    expect(res.body.totalLiquido).toBe(res.body.liquidaciones.reduce((a, l) => a + Number(l.liquido_pagar), 0));
+  });
+
+  it('filtra por rango de períodos (desde/hasta)', async () => {
+    const res = await request(app)
+      .get('/api/liquidaciones/historial')
+      .query({ empleado_id: empleadoId, desde: '2026-02', hasta: '2026-03' });
+
+    expect(res.status).toBe(200);
+    expect(res.body.cantidad).toBe(2);
+    const periodos = res.body.liquidaciones.map((l) => l.periodo).sort();
+    expect(periodos).toEqual(['2026-02', '2026-03']);
+  });
+
+  it('calcula el promedio del líquido pagado en el rango', async () => {
+    const res = await request(app)
+      .get('/api/liquidaciones/historial')
+      .query({ empleado_id: empleadoId, desde: '2026-01', hasta: '2026-04' });
+
+    expect(res.body.promedioLiquido).toBe(Math.round(res.body.totalLiquido / res.body.cantidad));
+  });
+
+  it('rechaza si falta empleado_id', async () => {
+    const res = await request(app).get('/api/liquidaciones/historial');
+    expect(res.status).toBe(400);
+  });
+
+  it('rechaza un formato de fecha inválido', async () => {
+    const res = await request(app)
+      .get('/api/liquidaciones/historial')
+      .query({ empleado_id: empleadoId, desde: '2026-1' });
+    expect(res.status).toBe(400);
+  });
+
+  it('rechaza si "desde" es posterior a "hasta"', async () => {
+    const res = await request(app)
+      .get('/api/liquidaciones/historial')
+      .query({ empleado_id: empleadoId, desde: '2026-04', hasta: '2026-01' });
+    expect(res.status).toBe(400);
+  });
+
+  it('rechaza si el empleado no existe', async () => {
+    const res = await request(app)
+      .get('/api/liquidaciones/historial')
+      .query({ empleado_id: 999999 });
+    expect(res.status).toBe(404);
+  });
+
+  it('devuelve un historial vacío si no hay liquidaciones en el rango', async () => {
+    const res = await request(app)
+      .get('/api/liquidaciones/historial')
+      .query({ empleado_id: empleadoId, desde: '2025-01', hasta: '2025-12' });
+    expect(res.status).toBe(200);
+    expect(res.body.cantidad).toBe(0);
+    expect(res.body.promedioLiquido).toBe(0);
+  });
+});

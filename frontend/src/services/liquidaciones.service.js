@@ -9,3 +9,10 @@ export async function generarLiquidacion(empleadoId, periodo) {
   const { data } = await api.post('/liquidaciones', { empleado_id: empleadoId, periodo });
   return data;
 }
+
+export async function obtenerHistorialRemuneraciones(empleadoId, desde, hasta) {
+  const { data } = await api.get('/liquidaciones/historial', {
+    params: { empleado_id: empleadoId, desde: desde || undefined, hasta: hasta || undefined },
+  });
+  return data;
+}

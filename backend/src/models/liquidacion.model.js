@@ -7,7 +7,7 @@ const COLUMNAS = `
   created_at
 `;
 
-async function findAll({ empleadoId, periodo } = {}) {
+async function findAll({ empleadoId, periodo, desde, hasta } = {}) {
   const condiciones = [];
   const valores = [];
 
@@ -18,6 +18,16 @@ async function findAll({ empleadoId, periodo } = {}) {
   if (periodo) {
     valores.push(periodo);
     condiciones.push(`periodo = $${valores.length}`);
+  }
+  // "periodo" es VARCHAR "YYYY-MM": la comparación lexicográfica equivale a la
+  // cronológica porque el formato está siempre completo y con ceros a la izquierda.
+  if (desde) {
+    valores.push(desde);
+    condiciones.push(`periodo >= $${valores.length}`);
+  }
+  if (hasta) {
+    valores.push(hasta);
+    condiciones.push(`periodo <= $${valores.length}`);
   }
 
   const where = condiciones.length ? `WHERE ${condiciones.join(' AND ')}` : '';

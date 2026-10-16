@@ -1,6 +1,9 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { listarLiquidaciones, generarLiquidacion } from '../services/liquidaciones.service';
+import {
+  generarLiquidacion,
+  obtenerHistorialRemuneraciones,
+} from '../services/liquidaciones.service';
 import { API_ORIGIN } from '../services/api';
 
 function formatearMonto(valor) {
@@ -9,17 +12,23 @@ function formatearMonto(valor) {
 
 function Liquidaciones() {
   const { empleadoId } = useParams();
-  const [liquidaciones, setLiquidaciones] = useState([]);
+  const [historial, setHistorial] = useState(null);
   const [periodo, setPeriodo] = useState('');
+  const [desde, setDesde] = useState('');
+  const [hasta, setHasta] = useState('');
   const [error, setError] = useState(null);
+  const [errorFiltro, setErrorFiltro] = useState(null);
 
-  const cargar = useCallback(async () => {
-    const data = await listarLiquidaciones(empleadoId);
-    setLiquidaciones(data);
-  }, [empleadoId]);
+  const cargar = useCallback(
+    async (filtroDesde, filtroHasta) => {
+      const data = await obtenerHistorialRemuneraciones(empleadoId, filtroDesde, filtroHasta);
+      setHistorial(data);
+    },
+    [empleadoId],
+  );
 
   useEffect(() => {
-    cargar();
+    cargar('', '');
   }, [cargar]);
 
   async function handleGenerar(e) {
@@ -28,9 +37,19 @@ function Liquidaciones() {
     try {
       await generarLiquidacion(Number(empleadoId), periodo);
       setPeriodo('');
-      await cargar();
+      await cargar(desde, hasta);
     } catch (err) {
       setError(err.response?.data?.error || 'Error al generar la liquidación');
+    }
+  }
+
+  async function handleFiltrar(e) {
+    e.preventDefault();
+    setErrorFiltro(null);
+    try {
+      await cargar(desde, hasta);
+    } catch (err) {
+      setErrorFiltro(err.response?.data?.error || 'Error al filtrar el historial');
     }
   }
 
@@ -41,20 +60,43 @@ function Liquidaciones() {
       </p>
       <h1>Liquidaciones del empleado #{empleadoId}</h1>
 
-      <form onSubmit={handleGenerar} className="card" style={{ display: 'grid', gap: '0.5rem', maxWidth: 280, marginBottom: '1.5rem' }}>
-        <h2>Generar liquidación</h2>
-        <label style={{ display: 'flex', flexDirection: 'column', fontSize: '0.85em', gap: '0.15rem' }}>
-          Período
-          <input
-            type="month"
-            value={periodo}
-            onChange={(e) => setPeriodo(e.target.value)}
-            required
-          />
-        </label>
-        {error && <p className="field-error">{error}</p>}
-        <button type="submit">Generar liquidación</button>
-      </form>
+      <div className="toolbar">
+        <form onSubmit={handleGenerar} className="card" style={{ display: 'grid', gap: '0.5rem', flex: '1 1 260px' }}>
+          <h2>Generar liquidación</h2>
+          <label style={{ display: 'flex', flexDirection: 'column', fontSize: '0.85em', gap: '0.15rem' }}>
+            Período
+            <input type="month" value={periodo} onChange={(e) => setPeriodo(e.target.value)} required />
+          </label>
+          {error && <p className="field-error">{error}</p>}
+          <button type="submit">Generar liquidación</button>
+        </form>
+
+        <form onSubmit={handleFiltrar} className="card" style={{ display: 'grid', gap: '0.5rem', flex: '1 1 260px' }}>
+          <h2>Filtrar historial por fecha</h2>
+          <label style={{ display: 'flex', flexDirection: 'column', fontSize: '0.85em', gap: '0.15rem' }}>
+            Desde
+            <input type="month" value={desde} onChange={(e) => setDesde(e.target.value)} />
+          </label>
+          <label style={{ display: 'flex', flexDirection: 'column', fontSize: '0.85em', gap: '0.15rem' }}>
+            Hasta
+            <input type="month" value={hasta} onChange={(e) => setHasta(e.target.value)} />
+          </label>
+          {errorFiltro && <p className="field-error">{errorFiltro}</p>}
+          <button type="submit">Filtrar</button>
+        </form>
+      </div>
+
+      {historial && (
+        <p>
+          {historial.cantidad} liquidación(es){historial.desde || historial.hasta ? ' en el rango seleccionado' : ''}
+          {historial.cantidad > 0 && (
+            <>
+              {' '}— Total líquido: <strong>${formatearMonto(historial.totalLiquido)}</strong> — Promedio:{' '}
+              <strong>${formatearMonto(historial.promedioLiquido)}</strong>
+            </>
+          )}
+        </p>
+      )}
 
       <table>
         <thead>
@@ -73,7 +115,7 @@ function Liquidaciones() {
           </tr>
         </thead>
         <tbody>
-          {liquidaciones.map((l) => (
+          {(historial?.liquidaciones || []).map((l) => (
             <tr key={l.id}>
               <td>{l.periodo}</td>
               <td>${formatearMonto(l.sueldo_base)}</td>
