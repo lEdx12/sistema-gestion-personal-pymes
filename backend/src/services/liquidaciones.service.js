@@ -10,9 +10,9 @@ const {
   calcularDescuentoAfp,
   calcularDescuentoSalud,
   calcularDescuentoCesantia,
-  obtenerBloquesSemanalesDelPeriodo,
 } = require('./liquidacionCalculo.service');
 const { generarPdfLiquidacion, rutaArchivo, nombreArchivo } = require('./liquidacionPdf.service');
+const { esPeriodoValido, obtenerBloquesSemanalesDelPeriodo } = require('../utils/periodo');
 
 class ServiceError extends Error {
   constructor(status, message) {
@@ -20,8 +20,6 @@ class ServiceError extends Error {
     this.status = status;
   }
 }
-
-const FORMATO_PERIODO = /^\d{4}-(0[1-9]|1[0-2])$/;
 
 async function listarLiquidaciones(opciones) {
   return liquidacionModel.findAll(opciones);
@@ -58,7 +56,7 @@ async function generarLiquidacion({ empleado_id, periodo }) {
   if (!empleado_id || !periodo) {
     throw new ServiceError(400, 'Los campos "empleado_id" y "periodo" son obligatorios');
   }
-  if (!FORMATO_PERIODO.test(periodo)) {
+  if (!esPeriodoValido(periodo)) {
     throw new ServiceError(400, 'El período debe tener el formato "YYYY-MM"');
   }
 

@@ -89,6 +89,9 @@ function Asistencia() {
         <Link to="/empleados">← Volver a empleados</Link>
       </p>
       <h1>Asistencia del empleado #{empleadoId}</h1>
+      <p>
+        <Link to={`/reportes/asistencia?empleado_id=${empleadoId}`}>Ver reporte mensual →</Link>
+      </p>
 
       {error && <p className="field-error">{error}</p>}
 

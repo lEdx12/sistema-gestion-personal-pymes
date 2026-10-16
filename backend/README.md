@@ -157,6 +157,24 @@ regenerarlo (una liquidación ya generada es inmutable, no tiene sentido recalcu
 PDF). Mismo enfoque de almacenamiento local que RF-04 (se migrará a Cloud Storage en
 RF-11). Pruebas en `tests/liquidaciones.test.js`.
 
+| Método | Ruta | Query | Respuesta |
+|--------|------|-------|-----------|
+| GET | `/api/asistencia/reporte-mensual` | `periodo` (obligatorio, `YYYY-MM`) + `empleado_id` opcional | `200` reporte individual (con `empleado_id`) o consolidado (sin él) / `400` / `404` |
+
+RF-12 (reporte de asistencia mensual): un mismo endpoint cubre los dos casos del RF.
+Con `empleado_id` devuelve `{ periodo, empleado, diasTrabajados, diasAusentes,
+totalHoras, horasSobrejornada, registros }` (el detalle día a día). Sin `empleado_id`
+devuelve `{ periodo, empleados: [...] }`, una fila por cada empleado activo con el
+mismo resumen. `src/utils/periodo.js` (nuevo, compartido con RF-09) centraliza
+`esPeriodoValido`, `rangoDelPeriodo` y `obtenerBloquesSemanalesDelPeriodo` — antes
+`obtenerBloquesSemanalesDelPeriodo` vivía duplicada en `liquidacionCalculo.service.js`;
+se refactorizó a este módulo al necesitarla de nuevo aquí. La sobrejornada se calcula
+igual que en RF-09 (por bloques semanales de 7 días, no sobre el mes completo).
+Frontend: página `/reportes/asistencia`, con selector de empleado ("Todos" = vista
+consolidada) y período; accesible desde la barra de navegación y desde la página de
+asistencia de cada empleado. Pruebas en `tests/periodo.test.js` y
+`tests/reporteMensual.test.js`.
+
 Cada nuevo RF debe agregar su tabla de endpoints aquí (método, ruta, body esperado,
 respuesta) al completarse.
 

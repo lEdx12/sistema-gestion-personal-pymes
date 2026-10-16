@@ -5,6 +5,7 @@ const {
   calcularSobrejornadaSemanal,
 } = require('./horasTrabajadas.service');
 const { calcularHorasExtra } = require('./horasExtra.service');
+const { esPeriodoValido, rangoDelPeriodo, obtenerBloquesSemanalesDelPeriodo } = require('../utils/periodo');
 
 class ServiceError extends Error {
   constructor(status, message) {
@@ -159,6 +160,78 @@ async function actualizarAsistencia(id, datos) {
   });
 }
 
+/**
+ * Resumen de asistencia de un empleado en un período completo "YYYY-MM": días
+ * trabajados, días de ausencia, horas totales y sobrejornada (sumada por bloques
+ * semanales — RF-07 — en vez de sobre el mes completo).
+ */
+async function calcularResumenMensualEmpleado(empleadoId, periodo) {
+  const { desde, hasta } = rangoDelPeriodo(periodo);
+  const registros = await asistenciaModel.findAll({ empleadoId, desde, hasta });
+
+  const diasTrabajados = registros.filter((r) => !r.ausente && r.horas_trabajadas != null).length;
+  const diasAusentes = registros.filter((r) => r.ausente).length;
+  const totalHoras = registros.reduce((acc, r) => acc + Number(r.horas_trabajadas || 0), 0);
+
+  let horasSobrejornada = 0;
+  for (const bloque of obtenerBloquesSemanalesDelPeriodo(periodo)) {
+    const registrosBloque = await asistenciaModel.findAll({
+      empleadoId,
+      desde: bloque.desde,
+      hasta: bloque.hasta,
+    });
+    const horasPorDia = registrosBloque.map((r) => r.horas_trabajadas);
+    horasSobrejornada += calcularSobrejornadaSemanal(horasPorDia).horasSobrejornada;
+  }
+
+  return {
+    diasTrabajados,
+    diasAusentes,
+    totalHoras: Math.round(totalHoras * 100) / 100,
+    horasSobrejornada: Math.round(horasSobrejornada * 100) / 100,
+  };
+}
+
+/**
+ * RF-12: reporte mensual de asistencia. Con `empleadoId` devuelve el detalle de ese
+ * empleado (registros + resumen); sin `empleadoId` devuelve el consolidado de todos
+ * los empleados activos para el período.
+ */
+async function obtenerReporteMensual({ empleadoId, periodo }) {
+  if (!esPeriodoValido(periodo)) {
+    throw new ServiceError(400, 'El parámetro "periodo" es obligatorio, formato "YYYY-MM"');
+  }
+
+  if (empleadoId) {
+    const empleado = await asegurarEmpleadoExiste(empleadoId);
+    const { desde, hasta } = rangoDelPeriodo(periodo);
+    const [registros, resumen] = await Promise.all([
+      asistenciaModel.findAll({ empleadoId, desde, hasta }),
+      calcularResumenMensualEmpleado(empleadoId, periodo),
+    ]);
+    return {
+      periodo,
+      empleado: { id: empleado.id, nombre: empleado.nombre, apellido: empleado.apellido, rut: empleado.rut },
+      ...resumen,
+      registros,
+    };
+  }
+
+  const empleados = await empleadoModel.findAll();
+  const filas = [];
+  for (const empleado of empleados) {
+    const resumen = await calcularResumenMensualEmpleado(empleado.id, periodo);
+    filas.push({
+      empleado_id: empleado.id,
+      nombre: empleado.nombre,
+      apellido: empleado.apellido,
+      rut: empleado.rut,
+      ...resumen,
+    });
+  }
+  return { periodo, empleados: filas };
+}
+
 module.exports = {
   ServiceError,
   listarAsistencia,
@@ -168,4 +241,5 @@ module.exports = {
   registrarAusencia,
   obtenerResumenSemanal,
   actualizarAsistencia,
+  obtenerReporteMensual,
 };

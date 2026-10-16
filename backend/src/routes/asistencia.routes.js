@@ -5,6 +5,7 @@ const router = express.Router();
 
 router.get('/', controller.listar);
 router.get('/resumen-semanal', controller.resumenSemanal);
+router.get('/reporte-mensual', controller.reporteMensual);
 router.get('/:id', controller.obtener);
 router.post('/entrada', controller.entrada);
 router.post('/ausencia', controller.ausencia);

@@ -77,4 +77,26 @@ async function resumenSemanal(req, res) {
   }
 }
 
-module.exports = { listar, obtener, entrada, salida, ausencia, actualizar, resumenSemanal };
+async function reporteMensual(req, res) {
+  try {
+    const { empleado_id, periodo } = req.query;
+    const reporte = await asistenciaService.obtenerReporteMensual({
+      empleadoId: empleado_id,
+      periodo,
+    });
+    res.json(reporte);
+  } catch (err) {
+    manejarError(res, err);
+  }
+}
+
+module.exports = {
+  listar,
+  obtener,
+  entrada,
+  salida,
+  ausencia,
+  actualizar,
+  resumenSemanal,
+  reporteMensual,
+};
