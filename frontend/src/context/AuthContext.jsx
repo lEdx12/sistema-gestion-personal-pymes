@@ -1,7 +1,11 @@
-import { createContext, useContext, useState, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { login as loginRequest, logout as logoutRequest } from '../services/auth.service';
+import { AuthContext } from './authContextInstance';
 
-const AuthContext = createContext(null);
+// El objeto de contexto y el hook useAuth() viven en archivos separados a propósito:
+// React Fast Refresh (HMR) no logra mantener la identidad del contexto cuando un mismo
+// archivo exporta algo que no es (solo) un componente — eso provocaba "useAuth debe
+// usarse dentro de <AuthProvider>" al guardar cambios durante el desarrollo.
 
 function leerUsuarioGuardado() {
   try {
@@ -35,10 +39,4 @@ export function AuthProvider({ children }) {
   return (
     <AuthContext.Provider value={{ token, usuario, login, logout }}>{children}</AuthContext.Provider>
   );
-}
-
-export function useAuth() {
-  const contexto = useContext(AuthContext);
-  if (!contexto) throw new Error('useAuth debe usarse dentro de <AuthProvider>');
-  return contexto;
 }

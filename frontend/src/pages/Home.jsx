@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../services/api';
+import { useAuth } from '../context/useAuth';
 
 function Home() {
+  const { usuario } = useAuth();
   const [health, setHealth] = useState(null);
   const [error, setError] = useState(null);
 
@@ -19,8 +21,8 @@ function Home() {
       {error && <p className="field-error">Error conectando al backend: {error}</p>}
       {health && (
         <p>
-          Backend conectado. Usuario de prueba: <strong>{health.user.nombre}</strong> (
-          {health.user.rol})
+          Backend conectado. Sesión iniciada como <strong>{usuario?.nombre}</strong> (
+          {usuario?.rol}).
         </p>
       )}
       {!health && !error && <p>Conectando al backend...</p>}
