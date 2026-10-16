@@ -1,4 +1,6 @@
 const request = require('supertest');
+const fs = require('fs');
+const path = require('path');
 const app = require('../src/app');
 const pool = require('../src/config/db');
 
@@ -23,6 +25,7 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
+  fs.rmSync(path.join(__dirname, '..', 'uploads', 'liquidaciones'), { recursive: true, force: true });
   await pool.query('DELETE FROM liquidaciones WHERE empleado_id = $1', [empleadoId]);
   await pool.query('DELETE FROM asistencia WHERE empleado_id = $1', [empleadoId]);
   await pool.query('DELETE FROM contratos WHERE empleado_id = $1', [empleadoId]);
@@ -109,5 +112,36 @@ describe('GET /api/liquidaciones', () => {
     expect(res.status).toBe(200);
     expect(res.body.length).toBeGreaterThanOrEqual(2);
     expect(res.body.every((l) => l.empleado_id === empleadoId)).toBe(true);
+  });
+});
+
+describe('GET /api/liquidaciones/:id/pdf', () => {
+  it('genera y descarga el PDF, y deja guardado pdf_url', async () => {
+    const listado = await request(app).get(`/api/liquidaciones?empleado_id=${empleadoId}`);
+    const liquidacion = listado.body.find((l) => l.periodo === '2026-02');
+
+    const res = await request(app).get(`/api/liquidaciones/${liquidacion.id}/pdf`);
+    expect(res.status).toBe(200);
+    expect(res.headers['content-type']).toBe('application/pdf');
+    expect(res.headers['content-disposition']).toContain('attachment');
+    expect(res.body.slice(0, 4).toString()).toBe('%PDF');
+
+    const actualizada = await request(app).get(`/api/liquidaciones/${liquidacion.id}`);
+    expect(actualizada.body.pdf_url).toMatch(/^\/uploads\/liquidaciones\/liquidacion-/);
+  });
+
+  it('reutiliza el PDF ya generado en la segunda descarga', async () => {
+    const listado = await request(app).get(`/api/liquidaciones?empleado_id=${empleadoId}`);
+    const liquidacion = listado.body.find((l) => l.periodo === '2026-02');
+
+    const primera = await request(app).get(`/api/liquidaciones/${liquidacion.id}/pdf`);
+    const segunda = await request(app).get(`/api/liquidaciones/${liquidacion.id}/pdf`);
+    expect(segunda.status).toBe(200);
+    expect(segunda.body.length).toBe(primera.body.length);
+  });
+
+  it('rechaza si la liquidación no existe', async () => {
+    const res = await request(app).get('/api/liquidaciones/999999/pdf');
+    expect(res.status).toBe(404);
   });
 });

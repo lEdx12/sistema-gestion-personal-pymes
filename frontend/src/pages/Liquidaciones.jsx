@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { listarLiquidaciones, generarLiquidacion } from '../services/liquidaciones.service';
+import { API_ORIGIN } from '../services/api';
 
 function formatearMonto(valor) {
   return Number(valor).toLocaleString('es-CL');
@@ -68,6 +69,7 @@ function Liquidaciones() {
             <th>Total haberes</th>
             <th>Total descuentos</th>
             <th>Líquido a pagar</th>
+            <th></th>
           </tr>
         </thead>
         <tbody>
@@ -84,6 +86,11 @@ function Liquidaciones() {
               <td>${formatearMonto(l.total_descuentos)}</td>
               <td>
                 <strong>${formatearMonto(l.liquido_pagar)}</strong>
+              </td>
+              <td>
+                <a href={`${API_ORIGIN}/api/liquidaciones/${l.id}/pdf`} target="_blank" rel="noreferrer">
+                  Descargar PDF
+                </a>
               </td>
             </tr>
           ))}

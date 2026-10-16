@@ -84,4 +84,12 @@ async function create(liquidacion) {
   return rows[0];
 }
 
-module.exports = { findAll, findById, findByEmpleadoPeriodo, create };
+async function actualizarPdfUrl(id, pdfUrl) {
+  const { rows } = await pool.query(
+    `UPDATE liquidaciones SET pdf_url = $1 WHERE id = $2 RETURNING ${COLUMNAS}`,
+    [pdfUrl, id],
+  );
+  return rows[0] || null;
+}
+
+module.exports = { findAll, findById, findByEmpleadoPeriodo, create, actualizarPdfUrl };

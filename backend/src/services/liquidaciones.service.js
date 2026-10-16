@@ -1,3 +1,4 @@
+const fs = require('fs');
 const liquidacionModel = require('../models/liquidacion.model');
 const empleadoModel = require('../models/empleado.model');
 const contratoModel = require('../models/contrato.model');
@@ -11,6 +12,7 @@ const {
   calcularDescuentoCesantia,
   obtenerBloquesSemanalesDelPeriodo,
 } = require('./liquidacionCalculo.service');
+const { generarPdfLiquidacion, rutaArchivo, nombreArchivo } = require('./liquidacionPdf.service');
 
 class ServiceError extends Error {
   constructor(status, message) {
@@ -105,9 +107,29 @@ async function generarLiquidacion({ empleado_id, periodo }) {
   });
 }
 
+/**
+ * Devuelve la ruta en disco del PDF de una liquidación, generándolo si aún no existe
+ * (la primera descarga lo crea y guarda `pdf_url`; las siguientes reutilizan el archivo).
+ */
+async function obtenerPdfLiquidacion(id) {
+  const liquidacion = await obtenerLiquidacion(id);
+
+  if (liquidacion.pdf_url && fs.existsSync(rutaArchivo(liquidacion))) {
+    return { ruta: rutaArchivo(liquidacion), nombre: nombreArchivo(liquidacion) };
+  }
+
+  const empleado = await empleadoModel.findById(liquidacion.empleado_id);
+  const ruta = await generarPdfLiquidacion(liquidacion, empleado);
+  const pdfUrl = `/uploads/liquidaciones/${nombreArchivo(liquidacion)}`;
+  await liquidacionModel.actualizarPdfUrl(id, pdfUrl);
+
+  return { ruta, nombre: nombreArchivo(liquidacion) };
+}
+
 module.exports = {
   ServiceError,
   listarLiquidaciones,
   obtenerLiquidacion,
   generarLiquidacion,
+  obtenerPdfLiquidacion,
 };

@@ -39,4 +39,13 @@ async function generar(req, res) {
   }
 }
 
-module.exports = { listar, obtener, generar };
+async function descargarPdf(req, res) {
+  try {
+    const { ruta, nombre } = await liquidacionesService.obtenerPdfLiquidacion(req.params.id);
+    res.download(ruta, nombre);
+  } catch (err) {
+    manejarError(res, err);
+  }
+}
+
+module.exports = { listar, obtener, generar, descargarPdf };

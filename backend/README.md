@@ -145,6 +145,18 @@ Un empleado/período solo puede liquidarse una vez (constraint `UNIQUE`). Prueba
 sueldo base $500.000 sin horas extra → gratificación $125.000, AFP $62.500, salud
 $43.750, cesantía $3.750, líquido a pagar $515.000).
 
+| Método | Ruta | Respuesta |
+|--------|------|-----------|
+| GET | `/api/liquidaciones/:id/pdf` | `200` descarga el PDF (`Content-Type: application/pdf`, `Content-Disposition: attachment`) / `404` si la liquidación no existe |
+
+RF-10 (descarga de liquidación en PDF): `src/services/liquidacionPdf.service.js` arma el
+PDF con `pdfkit` (haberes, descuentos y líquido a pagar). Se genera una sola vez por
+liquidación — la primera descarga lo crea en `backend/uploads/liquidaciones/` y guarda
+la ruta en `pdf_url`; las siguientes descargas reutilizan ese archivo en vez de
+regenerarlo (una liquidación ya generada es inmutable, no tiene sentido recalcular el
+PDF). Mismo enfoque de almacenamiento local que RF-04 (se migrará a Cloud Storage en
+RF-11). Pruebas en `tests/liquidaciones.test.js`.
+
 Cada nuevo RF debe agregar su tabla de endpoints aquí (método, ruta, body esperado,
 respuesta) al completarse.
 
