@@ -1,0 +1,113 @@
+const liquidacionModel = require('../models/liquidacion.model');
+const empleadoModel = require('../models/empleado.model');
+const contratoModel = require('../models/contrato.model');
+const asistenciaModel = require('../models/asistencia.model');
+const { calcularSobrejornadaSemanal } = require('./horasTrabajadas.service');
+const { calcularHorasExtra } = require('./horasExtra.service');
+const {
+  calcularGratificacion,
+  calcularDescuentoAfp,
+  calcularDescuentoSalud,
+  calcularDescuentoCesantia,
+  obtenerBloquesSemanalesDelPeriodo,
+} = require('./liquidacionCalculo.service');
+
+class ServiceError extends Error {
+  constructor(status, message) {
+    super(message);
+    this.status = status;
+  }
+}
+
+const FORMATO_PERIODO = /^\d{4}-(0[1-9]|1[0-2])$/;
+
+async function listarLiquidaciones(opciones) {
+  return liquidacionModel.findAll(opciones);
+}
+
+async function obtenerLiquidacion(id) {
+  const liquidacion = await liquidacionModel.findById(id);
+  if (!liquidacion) throw new ServiceError(404, 'Liquidación no encontrada');
+  return liquidacion;
+}
+
+/** Suma la sobrejornada (RF-07) de cada bloque semanal del período completo. */
+async function calcularHorasSobrejornadaDelPeriodo(empleadoId, periodo) {
+  const bloques = obtenerBloquesSemanalesDelPeriodo(periodo);
+  let total = 0;
+  for (const bloque of bloques) {
+    const registros = await asistenciaModel.findAll({
+      empleadoId,
+      desde: bloque.desde,
+      hasta: bloque.hasta,
+    });
+    const horasPorDia = registros.map((r) => r.horas_trabajadas);
+    total += calcularSobrejornadaSemanal(horasPorDia).horasSobrejornada;
+  }
+  return Math.round(total * 100) / 100;
+}
+
+/**
+ * Genera y persiste la liquidación de sueldo de un empleado para un período,
+ * orquestando el cálculo de horas extra (RF-07/RF-08) y las cotizaciones/gratificación
+ * legales. Un período solo puede liquidarse una vez por empleado.
+ */
+async function generarLiquidacion({ empleado_id, periodo }) {
+  if (!empleado_id || !periodo) {
+    throw new ServiceError(400, 'Los campos "empleado_id" y "periodo" son obligatorios');
+  }
+  if (!FORMATO_PERIODO.test(periodo)) {
+    throw new ServiceError(400, 'El período debe tener el formato "YYYY-MM"');
+  }
+
+  const empleado = await empleadoModel.findById(empleado_id);
+  if (!empleado) throw new ServiceError(404, 'Empleado no encontrado');
+
+  const existente = await liquidacionModel.findByEmpleadoPeriodo(empleado_id, periodo);
+  if (existente) {
+    throw new ServiceError(409, 'Ya existe una liquidación generada para este empleado y período');
+  }
+
+  const contrato = await contratoModel.findActivoByEmpleado(empleado_id);
+  if (!contrato) {
+    throw new ServiceError(400, 'El empleado no tiene un contrato activo; no se puede liquidar');
+  }
+
+  const sueldoBase = Number(empleado.sueldo_base);
+  const horasSobrejornada = await calcularHorasSobrejornadaDelPeriodo(empleado_id, periodo);
+  const { montoHorasExtra } = calcularHorasExtra({ sueldoBase, horasSobrejornada });
+
+  // Base imponible de la gratificación: sueldo base + horas extra del período.
+  const gratificacion = calcularGratificacion(sueldoBase + montoHorasExtra);
+
+  const totalHaberes = sueldoBase + montoHorasExtra + gratificacion;
+  const descuentoAfp = calcularDescuentoAfp(totalHaberes);
+  const descuentoSalud = calcularDescuentoSalud(totalHaberes);
+  const descuentoCesantia = calcularDescuentoCesantia(totalHaberes, contrato.tipo);
+  const totalDescuentos = descuentoAfp + descuentoSalud + descuentoCesantia;
+  const liquidoPagar = totalHaberes - totalDescuentos;
+
+  return liquidacionModel.create({
+    empleado_id,
+    // TODO: usar el id del usuario autenticado cuando RF-01 esté implementado.
+    generado_por: null,
+    periodo,
+    sueldo_base: sueldoBase,
+    horas_extra_monto: montoHorasExtra,
+    gratificacion,
+    descuento_afp: descuentoAfp,
+    descuento_salud: descuentoSalud,
+    descuento_cesantia: descuentoCesantia,
+    otros_descuentos: 0,
+    total_haberes: totalHaberes,
+    total_descuentos: totalDescuentos,
+    liquido_pagar: liquidoPagar,
+  });
+}
+
+module.exports = {
+  ServiceError,
+  listarLiquidaciones,
+  obtenerLiquidacion,
+  generarLiquidacion,
+};

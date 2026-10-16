@@ -1,7 +1,8 @@
 const { horaAMinutos } = require('../utils/horas');
+const { envNumber } = require('../utils/env');
 
 // TODO: validar valor legal vigente (Código del Trabajo, jornada ordinaria semanal)
-const JORNADA_SEMANAL_MAX_HORAS = Number(process.env.JORNADA_SEMANAL_MAX_HORAS) || 45;
+const JORNADA_SEMANAL_MAX_HORAS = envNumber('JORNADA_SEMANAL_MAX_HORAS', 45);
 
 /**
  * Calcula las horas trabajadas a partir de la hora de entrada y salida. Soporta turnos

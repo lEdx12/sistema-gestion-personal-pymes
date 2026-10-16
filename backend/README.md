@@ -120,6 +120,31 @@ hardcodeados**. `GET /api/asistencia/resumen-semanal` ahora también devuelve
 en `tests/horasExtra.test.js` (incluye CP-05 completo: 5h extra → $37.500 con sueldo
 base $900.000 y recargo 50%).
 
+| Método | Ruta | Body / Query | Respuesta |
+|--------|------|---------------|-----------|
+| GET | `/api/liquidaciones` | — (query opcional `?empleado_id=N&periodo=YYYY-MM`) | `200` lista de liquidaciones |
+| GET | `/api/liquidaciones/:id` | — | `200` liquidación / `404` |
+| POST | `/api/liquidaciones` | `{ empleado_id, periodo }` (`periodo` formato `YYYY-MM`) | `201` liquidación generada / `400` validación, formato de período o sin contrato activo / `404` empleado no existe / `409` ya existe liquidación para ese período |
+
+RF-09 (generación de liquidaciones — **Sprint 2**): orquesta RF-07/RF-08 y las
+cotizaciones/gratificación legales. `src/services/liquidacionCalculo.service.js` tiene
+las funciones puras (`calcularGratificacion`, `calcularDescuentoAfp`,
+`calcularDescuentoSalud`, `calcularDescuentoCesantia`,
+`obtenerBloquesSemanalesDelPeriodo`); `src/services/liquidaciones.service.js` orquesta:
+busca el contrato activo del empleado (requerido — si no tiene, `400`), suma la
+sobrejornada del período completo dividiéndolo en bloques de 7 días y aplicando
+`calcularSobrejornadaSemanal` (RF-07) a cada bloque, calcula el monto de horas extra
+(RF-08), la gratificación (25% de sueldo base + horas extra, con tope mensual), y las
+cotizaciones (AFP, salud, cesantía — esta última según el tipo de contrato: un
+trabajador con contrato a plazo fijo no cotiza cesantía). Todos los porcentajes/topes
+son configurables vía `.env` y están marcados `// TODO: validar valor legal vigente`
+— son valores de referencia, no específicos por AFP/Isapre de cada trabajador.
+`generado_por` queda en `null` hasta que RF-01 (autenticación real) esté implementado.
+Un empleado/período solo puede liquidarse una vez (constraint `UNIQUE`). Pruebas en
+`tests/liquidacionCalculo.test.js` y `tests/liquidaciones.test.js` (incluye CP-06:
+sueldo base $500.000 sin horas extra → gratificación $125.000, AFP $62.500, salud
+$43.750, cesantía $3.750, líquido a pagar $515.000).
+
 Cada nuevo RF debe agregar su tabla de endpoints aquí (método, ruta, body esperado,
 respuesta) al completarse.
 

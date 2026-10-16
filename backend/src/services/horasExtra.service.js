@@ -1,6 +1,8 @@
+const { envNumber } = require('../utils/env');
+
 // TODO: validar valores legales vigentes (Art. 32 Código del Trabajo)
-const RECARGO_HORA_EXTRA = Number(process.env.RECARGO_HORA_EXTRA) || 0.5;
-const HORAS_MENSUALES_JORNADA = Number(process.env.HORAS_MENSUALES_JORNADA) || 180;
+const RECARGO_HORA_EXTRA = envNumber('RECARGO_HORA_EXTRA', 0.5);
+const HORAS_MENSUALES_JORNADA = envNumber('HORAS_MENSUALES_JORNADA', 180);
 
 /** Valor de la hora ordinaria a partir del sueldo base mensual. */
 function calcularValorHoraOrdinaria(sueldoBase, horasMensuales = HORAS_MENSUALES_JORNADA) {
