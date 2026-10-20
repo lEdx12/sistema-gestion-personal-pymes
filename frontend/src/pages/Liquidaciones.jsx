@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import {
+  descargarLiquidacionPdf,
   generarLiquidacion,
   obtenerHistorialRemuneraciones,
 } from '../services/liquidaciones.service';
-import { API_ORIGIN } from '../services/api';
 
 function formatearMonto(valor) {
   return Number(valor).toLocaleString('es-CL');
@@ -18,6 +18,7 @@ function Liquidaciones() {
   const [hasta, setHasta] = useState('');
   const [error, setError] = useState(null);
   const [errorFiltro, setErrorFiltro] = useState(null);
+  const [errorPdf, setErrorPdf] = useState(null);
 
   const cargar = useCallback(
     async (filtroDesde, filtroHasta) => {
@@ -40,6 +41,15 @@ function Liquidaciones() {
       await cargar(desde, hasta);
     } catch (err) {
       setError(err.response?.data?.error || 'Error al generar la liquidación');
+    }
+  }
+
+  async function handleDescargarPdf(liquidacion) {
+    setErrorPdf(null);
+    try {
+      await descargarLiquidacionPdf(liquidacion.id, liquidacion.periodo);
+    } catch {
+      setErrorPdf('Error al descargar el PDF');
     }
   }
 
@@ -86,6 +96,8 @@ function Liquidaciones() {
         </form>
       </div>
 
+      {errorPdf && <p className="field-error">{errorPdf}</p>}
+
       {historial && (
         <p>
           {historial.cantidad} liquidación(es){historial.desde || historial.hasta ? ' en el rango seleccionado' : ''}
@@ -130,9 +142,9 @@ function Liquidaciones() {
                 <strong>${formatearMonto(l.liquido_pagar)}</strong>
               </td>
               <td>
-                <a href={`${API_ORIGIN}/api/liquidaciones/${l.id}/pdf`} target="_blank" rel="noreferrer">
+                <button type="button" onClick={() => handleDescargarPdf(l)}>
                   Descargar PDF
-                </a>
+                </button>
               </td>
             </tr>
           ))}
