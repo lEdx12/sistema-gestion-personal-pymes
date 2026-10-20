@@ -85,18 +85,22 @@ function Asistencia() {
 
   return (
     <div>
-      <p>
-        <Link to="/empleados">← Volver a empleados</Link>
-      </p>
-      <h1>Asistencia del empleado #{empleadoId}</h1>
-      <p>
-        <Link to={`/reportes/asistencia?empleado_id=${empleadoId}`}>Ver reporte mensual →</Link>
-      </p>
+      <div className="page-header">
+        <div>
+          <Link to="/empleados" className="back-link">
+            ← Volver a empleados
+          </Link>
+          <h1>Asistencia del empleado #{empleadoId}</h1>
+          <p className="page-subtitle">
+            <Link to={`/reportes/asistencia?empleado_id=${empleadoId}`}>Ver reporte mensual →</Link>
+          </p>
+        </div>
+      </div>
 
       {error && <p className="field-error">{error}</p>}
 
       <div className="toolbar">
-        <form onSubmit={handleEntrada} className="card" style={{ display: 'grid', gap: '0.5rem', flex: '1 1 220px' }}>
+        <form onSubmit={handleEntrada} className="card form-grid">
           <h2>Marcar entrada</h2>
           <input
             type="date"
@@ -113,7 +117,7 @@ function Asistencia() {
           <button type="submit">Marcar entrada</button>
         </form>
 
-        <form onSubmit={handleAusencia} className="card" style={{ display: 'grid', gap: '0.5rem', flex: '1 1 220px' }}>
+        <form onSubmit={handleAusencia} className="card form-grid">
           <h2>Registrar ausencia</h2>
           <input
             type="date"
@@ -131,7 +135,7 @@ function Asistencia() {
           <button type="submit">Registrar ausencia</button>
         </form>
 
-        <form onSubmit={handleResumen} className="card" style={{ display: 'grid', gap: '0.5rem', flex: '1 1 220px' }}>
+        <form onSubmit={handleResumen} className="card form-grid">
           <h2>Resumen semanal</h2>
           <input
             type="date"
@@ -147,7 +151,7 @@ function Asistencia() {
           />
           <button type="submit">Calcular</button>
           {resumen && (
-            <p style={{ fontSize: '0.85rem' }}>
+            <p style={{ fontSize: '0.85rem', margin: 0 }}>
               Total: {resumen.totalHoras} h — Sobrejornada: {resumen.horasSobrejornada} h (jornada
               máx.: {resumen.jornadaMaxHoras} h)
               <br />
@@ -158,29 +162,35 @@ function Asistencia() {
         </form>
       </div>
 
-      <table>
-        <thead>
-          <tr>
-            <th>Fecha</th>
-            <th>Entrada</th>
-            <th>Salida</th>
-            <th>Horas trabajadas</th>
-            <th>Ausente</th>
-            <th>Justificación</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody>
-          {registros.map((registro) => (
-            <AsistenciaRow
-              key={registro.id}
-              registro={registro}
-              onMarcarSalida={handleMarcarSalida}
-              onActualizar={handleActualizar}
-            />
-          ))}
-        </tbody>
-      </table>
+      <div className="table-wrap">
+        {registros.length === 0 ? (
+          <div className="empty-state">Todavía no hay registros de asistencia.</div>
+        ) : (
+          <table>
+            <thead>
+              <tr>
+                <th>Fecha</th>
+                <th>Entrada</th>
+                <th>Salida</th>
+                <th>Horas trabajadas</th>
+                <th>Ausente</th>
+                <th>Justificación</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              {registros.map((registro) => (
+                <AsistenciaRow
+                  key={registro.id}
+                  registro={registro}
+                  onMarcarSalida={handleMarcarSalida}
+                  onActualizar={handleActualizar}
+                />
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
     </div>
   );
 }

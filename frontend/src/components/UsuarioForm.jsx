@@ -8,8 +8,6 @@ function valoresDesdeUsuario(usuario) {
   return { nombre: usuario.nombre || '', email: usuario.email || '', password: '', rol: usuario.rol };
 }
 
-const estiloCampo = { display: 'flex', flexDirection: 'column', fontSize: '0.85em', gap: '0.15rem' };
-
 function UsuarioForm({ onSubmit, error, usuario, onCancelar }) {
   const esEdicion = Boolean(usuario);
   const [form, setForm] = useState(esEdicion ? valoresDesdeUsuario(usuario) : valoresPorDefecto());
@@ -29,17 +27,17 @@ function UsuarioForm({ onSubmit, error, usuario, onCancelar }) {
   }
 
   return (
-    <form onSubmit={handleSubmit} style={{ display: 'grid', gap: '0.5rem', maxWidth: 360 }}>
-      <label style={estiloCampo}>
+    <form onSubmit={handleSubmit} className="form-grid" style={{ maxWidth: 360 }}>
+      <label className="field">
         Nombre
         <input name="nombre" value={form.nombre} onChange={handleChange} required />
       </label>
-      <label style={estiloCampo}>
+      <label className="field">
         Email
         <input name="email" type="email" value={form.email} onChange={handleChange} required />
       </label>
       {!esEdicion && (
-        <label style={estiloCampo}>
+        <label className="field">
           Contraseña
           <input
             name="password"
@@ -51,7 +49,7 @@ function UsuarioForm({ onSubmit, error, usuario, onCancelar }) {
           />
         </label>
       )}
-      <label style={estiloCampo}>
+      <label className="field">
         Rol
         <select name="rol" value={form.rol} onChange={handleChange}>
           <option value="administrador">Administrador</option>
@@ -59,7 +57,7 @@ function UsuarioForm({ onSubmit, error, usuario, onCancelar }) {
         </select>
       </label>
       {error && <p className="field-error">{error}</p>}
-      <div style={{ display: 'flex', gap: '0.5rem' }}>
+      <div className="form-actions">
         <button type="submit">{esEdicion ? 'Guardar cambios' : 'Crear usuario'}</button>
         {esEdicion && (
           <button type="button" onClick={onCancelar}>

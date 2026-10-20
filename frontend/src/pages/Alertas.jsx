@@ -40,61 +40,70 @@ function Alertas() {
 
   return (
     <div>
-      <h1>Alertas de vencimiento de contratos</h1>
-
-      <div className="toolbar" style={{ marginBottom: '1.5rem', alignItems: 'center' }}>
+      <div className="page-header">
+        <div>
+          <h1>Alertas de vencimiento de contratos</h1>
+          <p className="page-subtitle">Contratos a plazo fijo próximos a vencer.</p>
+        </div>
         <button type="button" onClick={handleGenerar} disabled={generando}>
           {generando ? 'Revisando...' : 'Revisar vencimientos ahora'}
         </button>
-        <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-          <input
-            type="checkbox"
-            checked={soloNoLeidas}
-            onChange={(e) => setSoloNoLeidas(e.target.checked)}
-            style={{ width: 'auto' }}
-          />
-          Mostrar solo no leídas
-        </label>
       </div>
 
       {error && <p className="field-error">{error}</p>}
 
-      {alertas.length === 0 && <p>No hay alertas{soloNoLeidas ? ' pendientes' : ''}.</p>}
+      <div className="table-wrap">
+        <div className="table-toolbar">
+          <h2 style={{ margin: 0 }}>{alertas.length} alerta(s)</h2>
+          <label className="checkbox-label">
+            <input
+              type="checkbox"
+              checked={soloNoLeidas}
+              onChange={(e) => setSoloNoLeidas(e.target.checked)}
+            />
+            Mostrar solo no leídas
+          </label>
+        </div>
 
-      <table>
-        <thead>
-          <tr>
-            <th>Fecha</th>
-            <th>Empleado</th>
-            <th>Mensaje</th>
-            <th>Estado</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody>
-          {alertas.map((a) => (
-            <tr key={a.id}>
-              <td>{formatearFecha(a.fecha_alerta)}</td>
-              <td>
-                {a.empleado_nombre} {a.empleado_apellido} ({a.empleado_rut})
-              </td>
-              <td>{a.mensaje}</td>
-              <td>
-                <span className={`status-badge ${a.leida ? 'off' : 'ok'}`}>
-                  {a.leida ? 'Leída' : 'Pendiente'}
-                </span>
-              </td>
-              <td>
-                {!a.leida && (
-                  <button type="button" onClick={() => handleMarcarLeida(a.id)}>
-                    Marcar como leída
-                  </button>
-                )}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+        {alertas.length === 0 ? (
+          <div className="empty-state">No hay alertas{soloNoLeidas ? ' pendientes' : ''}.</div>
+        ) : (
+          <table>
+            <thead>
+              <tr>
+                <th>Fecha</th>
+                <th>Empleado</th>
+                <th>Mensaje</th>
+                <th>Estado</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              {alertas.map((a) => (
+                <tr key={a.id}>
+                  <td>{formatearFecha(a.fecha_alerta)}</td>
+                  <td>
+                    {a.empleado_nombre} {a.empleado_apellido} ({a.empleado_rut})
+                  </td>
+                  <td>{a.mensaje}</td>
+                  <td>
+                    <span className={`status-badge ${a.leida ? 'muted' : 'warn'}`}>
+                      {a.leida ? 'Leída' : 'Pendiente'}
+                    </span>
+                  </td>
+                  <td>
+                    {!a.leida && (
+                      <button type="button" onClick={() => handleMarcarLeida(a.id)}>
+                        Marcar como leída
+                      </button>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
     </div>
   );
 }

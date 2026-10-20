@@ -1,7 +1,6 @@
 import { useState } from 'react';
 
 const VACIO = { tipo: 'indefinido', fecha_inicio: '', fecha_termino: '' };
-const estiloCampo = { display: 'flex', flexDirection: 'column', fontSize: '0.85em', gap: '0.15rem' };
 
 function ContratoForm({ onSubmit, error, label }) {
   const [form, setForm] = useState(VACIO);
@@ -17,20 +16,20 @@ function ContratoForm({ onSubmit, error, label }) {
   }
 
   return (
-    <form onSubmit={handleSubmit} style={{ display: 'grid', gap: '0.5rem', maxWidth: 350 }}>
-      <label style={estiloCampo}>
+    <form onSubmit={handleSubmit} className="form-grid">
+      <label className="field">
         Tipo de contrato
         <select name="tipo" value={form.tipo} onChange={handleChange}>
           <option value="indefinido">Indefinido</option>
           <option value="plazo_fijo">Plazo fijo</option>
         </select>
       </label>
-      <label style={estiloCampo}>
+      <label className="field">
         Fecha de inicio
         <input name="fecha_inicio" type="date" value={form.fecha_inicio} onChange={handleChange} required />
       </label>
       {form.tipo === 'plazo_fijo' && (
-        <label style={estiloCampo}>
+        <label className="field">
           Fecha de término
           <input
             name="fecha_termino"
@@ -42,7 +41,9 @@ function ContratoForm({ onSubmit, error, label }) {
         </label>
       )}
       {error && <p className="field-error">{error}</p>}
-      <button type="submit">{label}</button>
+      <div className="form-actions">
+        <button type="submit">{label}</button>
+      </div>
     </form>
   );
 }

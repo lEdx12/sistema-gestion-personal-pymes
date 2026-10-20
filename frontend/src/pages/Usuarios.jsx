@@ -87,9 +87,14 @@ function Usuarios() {
 
   return (
     <div>
-      <h1>Usuarios del sistema</h1>
+      <div className="page-header">
+        <div>
+          <h1>Usuarios del sistema</h1>
+          <p className="page-subtitle">Cuentas de acceso y roles (Administrador / Gerente).</p>
+        </div>
+      </div>
 
-      <div className="card" style={{ marginBottom: '1.5rem' }}>
+      <div className="card" style={{ marginBottom: '1.5rem', maxWidth: 400 }}>
         <h2>{usuarioEditando ? `Editar usuario: ${usuarioEditando.email}` : 'Crear usuario'}</h2>
         <UsuarioForm
           onSubmit={handleGuardar}
@@ -99,28 +104,34 @@ function Usuarios() {
         />
       </div>
 
-      <label style={{ display: 'block', marginBottom: '0.75rem' }}>
-        <input
-          type="checkbox"
-          checked={mostrarInactivos}
-          onChange={(e) => setMostrarInactivos(e.target.checked)}
-          style={{ width: 'auto', marginRight: '0.4rem' }}
-        />
-        Mostrar usuarios inactivos
-      </label>
+      <div className="table-wrap">
+        <div className="table-toolbar">
+          <h2 style={{ margin: 0 }}>{usuarios.length} usuario(s)</h2>
+          <label className="checkbox-label">
+            <input
+              type="checkbox"
+              checked={mostrarInactivos}
+              onChange={(e) => setMostrarInactivos(e.target.checked)}
+            />
+            Mostrar usuarios inactivos
+          </label>
+        </div>
 
-      <table>
-        <thead>
-          <tr>
-            <th>Nombre</th>
-            <th>Email</th>
-            <th>Rol</th>
-            <th>Estado</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody>
-          {usuarios.map((u) => (
+        {usuarios.length === 0 ? (
+          <div className="empty-state">No hay usuarios para mostrar.</div>
+        ) : (
+        <table>
+          <thead>
+            <tr>
+              <th>Nombre</th>
+              <th>Email</th>
+              <th>Rol</th>
+              <th>Estado</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {usuarios.map((u) => (
             <tr key={u.id}>
               <td>{u.nombre}</td>
               <td>{u.email}</td>
@@ -170,8 +181,10 @@ function Usuarios() {
               </td>
             </tr>
           ))}
-        </tbody>
-      </table>
+          </tbody>
+        </table>
+        )}
+      </div>
     </div>
   );
 }

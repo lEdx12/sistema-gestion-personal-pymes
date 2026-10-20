@@ -68,16 +68,32 @@ function Liquidaciones() {
 
   return (
     <div>
-      <p>
-        <Link to={esAdministrador ? '/empleados' : '/'}>← Volver</Link>
-      </p>
-      <h1>Liquidaciones del empleado #{empleadoId}</h1>
+      <div className="page-header">
+        <div>
+          <Link to={esAdministrador ? '/empleados' : '/'} className="back-link">
+            ← Volver
+          </Link>
+          <h1>Liquidaciones del empleado #{empleadoId}</h1>
+          {historial && (
+            <p className="page-subtitle">
+              {historial.cantidad} liquidación(es)
+              {historial.desde || historial.hasta ? ' en el rango seleccionado' : ''}
+              {historial.cantidad > 0 && (
+                <>
+                  {' '}— Total líquido: <strong>${formatearMonto(historial.totalLiquido)}</strong> — Promedio:{' '}
+                  <strong>${formatearMonto(historial.promedioLiquido)}</strong>
+                </>
+              )}
+            </p>
+          )}
+        </div>
+      </div>
 
       <div className="toolbar">
         {esAdministrador && (
-          <form onSubmit={handleGenerar} className="card" style={{ display: 'grid', gap: '0.5rem', flex: '1 1 260px' }}>
+          <form onSubmit={handleGenerar} className="card form-grid">
             <h2>Generar liquidación</h2>
-            <label style={{ display: 'flex', flexDirection: 'column', fontSize: '0.85em', gap: '0.15rem' }}>
+            <label className="field">
               Período
               <input type="month" value={periodo} onChange={(e) => setPeriodo(e.target.value)} required />
             </label>
@@ -86,13 +102,13 @@ function Liquidaciones() {
           </form>
         )}
 
-        <form onSubmit={handleFiltrar} className="card" style={{ display: 'grid', gap: '0.5rem', flex: '1 1 260px' }}>
+        <form onSubmit={handleFiltrar} className="card form-grid">
           <h2>Filtrar historial por fecha</h2>
-          <label style={{ display: 'flex', flexDirection: 'column', fontSize: '0.85em', gap: '0.15rem' }}>
+          <label className="field">
             Desde
             <input type="month" value={desde} onChange={(e) => setDesde(e.target.value)} />
           </label>
-          <label style={{ display: 'flex', flexDirection: 'column', fontSize: '0.85em', gap: '0.15rem' }}>
+          <label className="field">
             Hasta
             <input type="month" value={hasta} onChange={(e) => setHasta(e.target.value)} />
           </label>
@@ -103,58 +119,52 @@ function Liquidaciones() {
 
       {errorPdf && <p className="field-error">{errorPdf}</p>}
 
-      {historial && (
-        <p>
-          {historial.cantidad} liquidación(es){historial.desde || historial.hasta ? ' en el rango seleccionado' : ''}
-          {historial.cantidad > 0 && (
-            <>
-              {' '}— Total líquido: <strong>${formatearMonto(historial.totalLiquido)}</strong> — Promedio:{' '}
-              <strong>${formatearMonto(historial.promedioLiquido)}</strong>
-            </>
-          )}
-        </p>
-      )}
-
-      <table>
-        <thead>
-          <tr>
-            <th>Período</th>
-            <th>Sueldo base</th>
-            <th>Horas extra</th>
-            <th>Gratificación</th>
-            <th>Desc. AFP</th>
-            <th>Desc. salud</th>
-            <th>Desc. cesantía</th>
-            <th>Total haberes</th>
-            <th>Total descuentos</th>
-            <th>Líquido a pagar</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody>
-          {(historial?.liquidaciones || []).map((l) => (
-            <tr key={l.id}>
-              <td>{l.periodo}</td>
-              <td>${formatearMonto(l.sueldo_base)}</td>
-              <td>${formatearMonto(l.horas_extra_monto)}</td>
-              <td>${formatearMonto(l.gratificacion)}</td>
-              <td>${formatearMonto(l.descuento_afp)}</td>
-              <td>${formatearMonto(l.descuento_salud)}</td>
-              <td>${formatearMonto(l.descuento_cesantia)}</td>
-              <td>${formatearMonto(l.total_haberes)}</td>
-              <td>${formatearMonto(l.total_descuentos)}</td>
-              <td>
-                <strong>${formatearMonto(l.liquido_pagar)}</strong>
-              </td>
-              <td>
-                <button type="button" onClick={() => handleDescargarPdf(l)}>
-                  Descargar PDF
-                </button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      <div className="table-wrap">
+        {(historial?.liquidaciones || []).length === 0 ? (
+          <div className="empty-state">No hay liquidaciones para mostrar.</div>
+        ) : (
+          <table>
+            <thead>
+              <tr>
+                <th>Período</th>
+                <th>Sueldo base</th>
+                <th>Horas extra</th>
+                <th>Gratificación</th>
+                <th>Desc. AFP</th>
+                <th>Desc. salud</th>
+                <th>Desc. cesantía</th>
+                <th>Total haberes</th>
+                <th>Total descuentos</th>
+                <th>Líquido a pagar</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              {historial.liquidaciones.map((l) => (
+                <tr key={l.id}>
+                  <td>{l.periodo}</td>
+                  <td>${formatearMonto(l.sueldo_base)}</td>
+                  <td>${formatearMonto(l.horas_extra_monto)}</td>
+                  <td>${formatearMonto(l.gratificacion)}</td>
+                  <td>${formatearMonto(l.descuento_afp)}</td>
+                  <td>${formatearMonto(l.descuento_salud)}</td>
+                  <td>${formatearMonto(l.descuento_cesantia)}</td>
+                  <td>${formatearMonto(l.total_haberes)}</td>
+                  <td>${formatearMonto(l.total_descuentos)}</td>
+                  <td>
+                    <strong>${formatearMonto(l.liquido_pagar)}</strong>
+                  </td>
+                  <td>
+                    <button type="button" onClick={() => handleDescargarPdf(l)}>
+                      Descargar PDF
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
     </div>
   );
 }

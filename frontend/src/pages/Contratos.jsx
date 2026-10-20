@@ -56,12 +56,16 @@ function Contratos() {
 
   return (
     <div>
-      <p>
-        <Link to="/empleados">← Volver a empleados</Link>
-      </p>
-      <h1>Contratos del empleado #{empleadoId}</h1>
+      <div className="page-header">
+        <div>
+          <Link to="/empleados" className="back-link">
+            ← Volver a empleados
+          </Link>
+          <h1>Contratos del empleado #{empleadoId}</h1>
+        </div>
+      </div>
 
-      <div className="card" style={{ marginBottom: '1.5rem' }}>
+      <div className="card" style={{ marginBottom: '1.5rem', maxWidth: 400 }}>
         {contratoActivo ? (
           <>
             <h2>Renovar contrato activo</h2>
@@ -75,34 +79,40 @@ function Contratos() {
         )}
       </div>
 
-      <table>
-        <thead>
-          <tr>
-            <th>Tipo</th>
-            <th>Inicio</th>
-            <th>Término</th>
-            <th>Activo</th>
-            <th>Documento</th>
-          </tr>
-        </thead>
-        <tbody>
-          {contratos.map((c) => (
-            <tr key={c.id}>
-              <td>{c.tipo}</td>
-              <td>{c.fecha_inicio?.slice(0, 10)}</td>
-              <td>{c.fecha_termino?.slice(0, 10) || '—'}</td>
-              <td>
-                <span className={`status-badge ${c.activo ? 'ok' : 'off'}`}>
-                  {c.activo ? 'Sí' : 'No'}
-                </span>
-              </td>
-              <td>
-                <ContratoDocumento contrato={c} onSubirDocumento={handleSubirDocumento} />
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      <div className="table-wrap">
+        {contratos.length === 0 ? (
+          <div className="empty-state">Este empleado todavía no tiene contratos.</div>
+        ) : (
+          <table>
+            <thead>
+              <tr>
+                <th>Tipo</th>
+                <th>Inicio</th>
+                <th>Término</th>
+                <th>Activo</th>
+                <th>Documento</th>
+              </tr>
+            </thead>
+            <tbody>
+              {contratos.map((c) => (
+                <tr key={c.id}>
+                  <td>{c.tipo}</td>
+                  <td>{c.fecha_inicio?.slice(0, 10)}</td>
+                  <td>{c.fecha_termino?.slice(0, 10) || '—'}</td>
+                  <td>
+                    <span className={`status-badge ${c.activo ? 'ok' : 'off'}`}>
+                      {c.activo ? 'Sí' : 'No'}
+                    </span>
+                  </td>
+                  <td>
+                    <ContratoDocumento contrato={c} onSubirDocumento={handleSubirDocumento} />
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
     </div>
   );
 }

@@ -49,14 +49,18 @@ function Documentos() {
 
   return (
     <div>
-      <p>
-        <Link to="/empleados">← Volver a empleados</Link>
-      </p>
-      <h1>Documentos del empleado #{empleadoId}</h1>
+      <div className="page-header">
+        <div>
+          <Link to="/empleados" className="back-link">
+            ← Volver a empleados
+          </Link>
+          <h1>Documentos del empleado #{empleadoId}</h1>
+        </div>
+      </div>
 
-      <form onSubmit={handleSubir} className="card" style={{ display: 'grid', gap: '0.5rem', maxWidth: 360, marginBottom: '1.5rem' }}>
+      <form onSubmit={handleSubir} className="card form-grid" style={{ maxWidth: 360, marginBottom: '1.5rem' }}>
         <h2>Subir documento</h2>
-        <label style={{ display: 'flex', flexDirection: 'column', fontSize: '0.85em', gap: '0.15rem' }}>
+        <label className="field">
           Tipo (opcional)
           <input
             value={tipo}
@@ -76,33 +80,39 @@ function Documentos() {
         </button>
       </form>
 
-      <table>
-        <thead>
-          <tr>
-            <th>Nombre</th>
-            <th>Tipo</th>
-            <th>Subido</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody>
-          {documentos.map((d) => (
-            <tr key={d.id}>
-              <td>{d.nombre}</td>
-              <td>{d.tipo}</td>
-              <td>{d.created_at?.slice(0, 10)}</td>
-              <td>
-                <a href={resolverUrl(d.url)} target="_blank" rel="noreferrer">
-                  Ver
-                </a>{' '}
-                <button type="button" onClick={() => handleEliminar(d.id)}>
-                  Eliminar
-                </button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      <div className="table-wrap">
+        {documentos.length === 0 ? (
+          <div className="empty-state">Este empleado todavía no tiene documentos adjuntos.</div>
+        ) : (
+          <table>
+            <thead>
+              <tr>
+                <th>Nombre</th>
+                <th>Tipo</th>
+                <th>Subido</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              {documentos.map((d) => (
+                <tr key={d.id}>
+                  <td>{d.nombre}</td>
+                  <td>{d.tipo}</td>
+                  <td>{d.created_at?.slice(0, 10)}</td>
+                  <td>
+                    <a href={resolverUrl(d.url)} target="_blank" rel="noreferrer">
+                      Ver
+                    </a>{' '}
+                    <button type="button" onClick={() => handleEliminar(d.id)}>
+                      Eliminar
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
     </div>
   );
 }

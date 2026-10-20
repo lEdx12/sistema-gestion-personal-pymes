@@ -36,8 +36,6 @@ function valoresDesdeEmpleado(empleado) {
   };
 }
 
-const estiloCampo = { display: 'flex', flexDirection: 'column', fontSize: '0.85em', gap: '0.15rem' };
-
 function EmpleadoForm({ onSubmit, error, empleado, onCancelar }) {
   const esEdicion = Boolean(empleado);
   const [form, setForm] = useState(esEdicion ? valoresDesdeEmpleado(empleado) : valoresPorDefecto());
@@ -57,64 +55,66 @@ function EmpleadoForm({ onSubmit, error, empleado, onCancelar }) {
   }
 
   return (
-    <form onSubmit={handleSubmit} style={{ display: 'grid', gap: '0.5rem', maxWidth: 400 }}>
-      <label style={estiloCampo}>
-        RUT
-        <input
-          name="rut"
-          placeholder="12.345.678-5"
-          value={form.rut}
-          onChange={handleChange}
-          required
-          disabled={esEdicion}
-          title={esEdicion ? 'El RUT no se puede modificar' : undefined}
-        />
-      </label>
-      <label style={estiloCampo}>
-        Nombre
-        <input name="nombre" value={form.nombre} onChange={handleChange} required />
-      </label>
-      <label style={estiloCampo}>
-        Apellido
-        <input name="apellido" value={form.apellido} onChange={handleChange} required />
-      </label>
-      <label style={estiloCampo}>
-        Fecha de nacimiento
-        <input
-          name="fecha_nacimiento"
-          type="date"
-          value={form.fecha_nacimiento}
-          onChange={handleChange}
-        />
-      </label>
-      <label style={estiloCampo}>
+    <form onSubmit={handleSubmit} className="form-grid" style={{ maxWidth: 420 }}>
+      <div className="form-grid" style={{ gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+        <label className="field">
+          RUT
+          <input
+            name="rut"
+            placeholder="12.345.678-5"
+            value={form.rut}
+            onChange={handleChange}
+            required
+            disabled={esEdicion}
+            title={esEdicion ? 'El RUT no se puede modificar' : undefined}
+          />
+        </label>
+        <label className="field">
+          Fecha de nacimiento
+          <input
+            name="fecha_nacimiento"
+            type="date"
+            value={form.fecha_nacimiento}
+            onChange={handleChange}
+          />
+        </label>
+        <label className="field">
+          Nombre
+          <input name="nombre" value={form.nombre} onChange={handleChange} required />
+        </label>
+        <label className="field">
+          Apellido
+          <input name="apellido" value={form.apellido} onChange={handleChange} required />
+        </label>
+        <label className="field">
+          Cargo
+          <input name="cargo" value={form.cargo} onChange={handleChange} />
+        </label>
+        <label className="field">
+          Sueldo base
+          <input
+            name="sueldo_base"
+            type="number"
+            value={form.sueldo_base}
+            onChange={handleChange}
+            required
+          />
+        </label>
+        <label className="field">
+          Email
+          <input name="email" type="email" value={form.email} onChange={handleChange} />
+        </label>
+        <label className="field">
+          Teléfono
+          <input name="telefono" value={form.telefono} onChange={handleChange} />
+        </label>
+      </div>
+      <label className="field">
         Dirección
         <input name="direccion" value={form.direccion} onChange={handleChange} />
       </label>
-      <label style={estiloCampo}>
-        Cargo
-        <input name="cargo" value={form.cargo} onChange={handleChange} />
-      </label>
-      <label style={estiloCampo}>
-        Sueldo base
-        <input
-          name="sueldo_base"
-          type="number"
-          value={form.sueldo_base}
-          onChange={handleChange}
-          required
-        />
-      </label>
-      <label style={estiloCampo}>
-        Email
-        <input name="email" type="email" value={form.email} onChange={handleChange} />
-      </label>
-      <label style={estiloCampo}>
-        Teléfono
-        <input name="telefono" value={form.telefono} onChange={handleChange} />
-      </label>
       {error && <p className="field-error">{error}</p>}
-      <div style={{ display: 'flex', gap: '0.5rem' }}>
+      <div className="form-actions">
         <button type="submit">{esEdicion ? 'Guardar cambios' : 'Registrar empleado'}</button>
         {esEdicion && (
           <button type="button" onClick={onCancelar}>

@@ -17,7 +17,7 @@ function Login() {
     setCargando(true);
     try {
       await login(email, password);
-      const destino = location.state?.from || '/empleados';
+      const destino = location.state?.from || '/';
       navigate(destino, { replace: true });
     } catch (err) {
       setError(err.response?.data?.error || 'Error al iniciar sesión');
@@ -27,33 +27,43 @@ function Login() {
   }
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', alignItems: 'center', justifyContent: 'center' }}>
-      <form onSubmit={handleSubmit} className="card" style={{ display: 'grid', gap: '0.75rem', width: '100%', maxWidth: 340 }}>
-        <h1 style={{ textAlign: 'center' }}>Gestión de Personal</h1>
-        <label style={{ display: 'flex', flexDirection: 'column', fontSize: '0.85em', gap: '0.15rem' }}>
-          Email
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            autoComplete="username"
-            required
-          />
-        </label>
-        <label style={{ display: 'flex', flexDirection: 'column', fontSize: '0.85em', gap: '0.15rem' }}>
-          Contraseña
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            autoComplete="current-password"
-            required
-          />
-        </label>
-        {error && <p className="field-error">{error}</p>}
-        <button type="submit" disabled={cargando}>
-          {cargando ? 'Ingresando…' : 'Ingresar'}
-        </button>
+    <div className="login-shell">
+      <form onSubmit={handleSubmit} className="card login-card">
+        <div className="login-brand">
+          <span className="sidebar-brand-mark">GP</span>
+          <div>
+            <h1>Gestión de Personal</h1>
+            <p className="page-subtitle" style={{ margin: 0 }}>
+              Ingresa con tu cuenta para continuar
+            </p>
+          </div>
+        </div>
+        <div className="form-grid">
+          <label className="field">
+            Email
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              autoComplete="username"
+              required
+            />
+          </label>
+          <label className="field">
+            Contraseña
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              autoComplete="current-password"
+              required
+            />
+          </label>
+          {error && <p className="field-error">{error}</p>}
+          <button type="submit" disabled={cargando}>
+            {cargando ? 'Ingresando…' : 'Ingresar'}
+          </button>
+        </div>
       </form>
     </div>
   );
