@@ -83,6 +83,11 @@ describe('RF-02: el Gerente solo puede leer reportes, liquidaciones e historial'
     const res = await request(app).get('/api/usuarios').set('Authorization', authGerente);
     expect(res.status).toBe(403);
   });
+
+  it('rechaza al Gerente las alertas de vencimiento (RF-05)', async () => {
+    const res = await request(app).get('/api/alertas').set('Authorization', authGerente);
+    expect(res.status).toBe(403);
+  });
 });
 
 describe('RF-02: el Administrador conserva acceso completo', () => {

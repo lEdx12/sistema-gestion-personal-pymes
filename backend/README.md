@@ -245,6 +245,28 @@ validación de email duplicado. Las contraseñas se hashean con `bcrypt` (10 rou
 igual que en `seedAdmin.js`. Frontend: página `/usuarios` (enlace "Usuarios" en la barra
 de navegación, visible solo para `administrador`). Pruebas en `tests/usuarios.test.js`.
 
+| Método | Ruta | Query/Body | Respuesta |
+|--------|------|------------|-----------|
+| GET | `/api/alertas` | query opcional `?soloNoLeidas=true` | `200` lista de alertas (con datos del empleado), más recientes primero |
+| PUT | `/api/alertas/:id/leida` | — | `200` alerta con `leida: true` / `404` |
+| POST | `/api/alertas/generar` | — | `201` lista de alertas recién creadas en esta corrida (puede ser vacía) |
+
+RF-05 (alertas de vencimiento de contratos — **Sprint 4**): `src/services/alertas.service.js`
+revisa los contratos `plazo_fijo` activos cuyo `fecha_termino` cae dentro de
+`ALERTA_DIAS_ANTICIPACION` días desde hoy (default 30, configurable, incluye los ya
+vencidos) y crea una alerta por cada uno que todavía no tenga una — así el job puede
+correr todos los días sin duplicar avisos. **No se usa un scheduler en memoria
+(node-cron)**: acoplar el "job diario" al proceso del servidor web duplicaría la
+ejecución si hay más de una instancia corriendo, y no es portable entre
+Render/Railway/un VPS (RNF-08). En su lugar, `npm run job:alertas`
+(`src/jobs/generarAlertasVencimiento.js`) es un script independiente pensado para
+invocarse una vez al día desde un scheduler externo (Render Cron Jobs, Railway Cron, o
+un crontab de sistema); `POST /api/alertas/generar` expone la misma lógica por API para
+poder probarla o dispararla manualmente desde el frontend sin depender de ese
+scheduler. Frontend: página `/alertas` (enlace "Alertas" en la barra de navegación,
+solo para `administrador`, igual que empleados/contratos/usuarios — ver matriz de
+RF-02). Pruebas en `tests/alertas.test.js`.
+
 Cada nuevo RF debe agregar su tabla de endpoints aquí (método, ruta, body esperado,
 respuesta) al completarse.
 

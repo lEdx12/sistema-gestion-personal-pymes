@@ -66,4 +66,6 @@ Ambos agentes operan sobre este mismo directorio/repositorio. Para evitar choque
 
 ## Estado
 
-Sprint 1 en curso — ver sección 9 de `PROJECT.md` para el detalle de cada RF.
+Sprint 4 en curso (RF-05, RF-11) — Sprints 1 a 3 completos (RF-01, RF-02, RF-03, RF-04,
+RF-06 a RF-10, RF-12 a RF-14). Ver sección 8 de `PROJECT.md` para el detalle de cada
+sprint y `backend/README.md` para los endpoints de cada RF.

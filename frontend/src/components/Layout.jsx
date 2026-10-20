@@ -19,6 +19,7 @@ function Layout() {
         <nav style={{ display: 'flex', alignItems: 'center' }}>
           {usuario?.rol === 'administrador' && <Link to="/empleados">Empleados</Link>}
           <Link to="/reportes/asistencia">Reportes</Link>
+          {usuario?.rol === 'administrador' && <Link to="/alertas">Alertas</Link>}
           {usuario?.rol === 'administrador' && <Link to="/usuarios">Usuarios</Link>}
           {usuario && (
             <span style={{ marginLeft: '1.25rem', fontSize: '0.85em', color: 'var(--text-muted)' }}>

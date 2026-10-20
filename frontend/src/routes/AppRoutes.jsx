@@ -10,6 +10,7 @@ import Asistencia from '../pages/Asistencia';
 import Liquidaciones from '../pages/Liquidaciones';
 import ReporteAsistencia from '../pages/ReporteAsistencia';
 import Usuarios from '../pages/Usuarios';
+import Alertas from '../pages/Alertas';
 
 function AppRoutes() {
   return (
@@ -26,6 +27,7 @@ function AppRoutes() {
             <Route path="/empleados/:empleadoId/contratos" element={<Contratos />} />
             <Route path="/empleados/:empleadoId/asistencia" element={<Asistencia />} />
             <Route path="/usuarios" element={<Usuarios />} />
+            <Route path="/alertas" element={<Alertas />} />
           </Route>
           <Route path="/empleados/:empleadoId/liquidaciones" element={<Liquidaciones />} />
           <Route path="/reportes/asistencia" element={<ReporteAsistencia />} />

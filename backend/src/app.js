@@ -9,6 +9,7 @@ const contratosRoutes = require('./routes/contratos.routes');
 const asistenciaRoutes = require('./routes/asistencia.routes');
 const liquidacionesRoutes = require('./routes/liquidaciones.routes');
 const usuariosRoutes = require('./routes/usuarios.routes');
+const alertasRoutes = require('./routes/alertas.routes');
 
 const app = express();
 
@@ -30,6 +31,7 @@ app.use('/api/contratos', contratosRoutes);
 app.use('/api/asistencia', asistenciaRoutes);
 app.use('/api/liquidaciones', liquidacionesRoutes);
 app.use('/api/usuarios', usuariosRoutes);
+app.use('/api/alertas', alertasRoutes);
 
 app.use((req, res) => {
   res.status(404).json({ error: 'Ruta no encontrada' });
