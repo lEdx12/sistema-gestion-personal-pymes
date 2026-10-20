@@ -28,11 +28,10 @@ planos en `/migrations`, aplicados y registrados por `src/config/runMigrations.j
 El `mockAuth` del Sprint 1 fue reemplazado por autenticación JWT real
 (`src/middleware/auth.js`). **Toda ruta bajo `/api/` exige un header
 `Authorization: Bearer <token>` válido, excepto `/api/health` y `/api/auth/*`.**
-No hay restricción por rol todavía — cualquier usuario autenticado (`administrador` o
-`gerente`) puede usar cualquier endpoint; eso es RF-02 (Sprint 3).
+La restricción por rol (`administrador`/`gerente`) se agrega en `src/middleware/roles.js`
+— ver RF-02 más abajo.
 
-Como RF-14 (CRUD de usuarios) tampoco existe todavía, no hay forma de crear una cuenta
-desde la UI. El primer usuario administrador se crea con:
+El primer usuario administrador se crea con:
 
 ```bash
 # Definir ADMIN_EMAIL / ADMIN_NOMBRE / ADMIN_PASSWORD en backend/.env primero
@@ -208,6 +207,43 @@ Frontend: página `/reportes/asistencia`, con selector de empleado ("Todos" = vi
 consolidada) y período; accesible desde la barra de navegación y desde la página de
 asistencia de cada empleado. Pruebas en `tests/periodo.test.js` y
 `tests/reporteMensual.test.js`.
+
+RF-02 (gestión de roles — **Sprint 3**): `permitirRoles(...roles)`
+(`src/middleware/roles.js`) se monta después de `auth.js` y devuelve `403` si
+`req.user.rol` no está en la lista. Matriz de permisos (sección 3 de `PROJECT.md`):
+`administrador` tiene acceso completo a todos los módulos; `gerente` solo puede leer
+reportes, liquidaciones e historial de remuneraciones, es decir:
+
+| Módulo | Administrador | Gerente |
+|--------|----------------|---------|
+| `/api/empleados`, `/api/contratos` | CRUD completo | sin acceso (`403`) |
+| `/api/asistencia` (marcaje, edición, resumen semanal) | CRUD completo | sin acceso (`403`) |
+| `GET /api/asistencia/reporte-mensual` | sí | sí (solo lectura) |
+| `GET /api/liquidaciones`, `/historial`, `/:id`, `/:id/pdf` | sí | sí (solo lectura) |
+| `POST /api/liquidaciones` (generar) | sí | sin acceso (`403`) |
+| `/api/usuarios` (RF-14) | CRUD completo | sin acceso (`403`) |
+
+Frontend: `RequireRole` (`src/components/RequireRole.jsx`) oculta del lado del cliente
+las rutas que el backend ya rechaza para el rol del usuario autenticado (redirige a
+`/`), y la barra de navegación/los formularios de "generar liquidación" también se
+ajustan según `usuario.rol`. Pruebas en `tests/roles.test.js`.
+
+| Método | Ruta | Body | Respuesta |
+|--------|------|------|-----------|
+| GET | `/api/usuarios` | — (query opcional `?incluirInactivos=true`) | `200` lista de usuarios (activos por defecto, sin `password_hash`) |
+| GET | `/api/usuarios/:id` | — | `200` usuario / `404` |
+| POST | `/api/usuarios` | `{ nombre, email, password, rol }` (`rol`: `administrador`\|`gerente`, `password` ≥ 8 caracteres) | `201` usuario creado / `400` validación / `409` email ya registrado |
+| PUT | `/api/usuarios/:id` | `{ nombre, email, rol }` | `200` actualizado / `400` / `404` / `409` email ya usado por otro usuario |
+| PUT | `/api/usuarios/:id/password` | `{ password }` | `204` / `400` / `404` |
+| PUT | `/api/usuarios/:id/desactivar` | — | `200` usuario con `activo: false` (no puede volver a loguearse) / `404` |
+| PUT | `/api/usuarios/:id/reactivar` | — | `200` usuario con `activo: true` / `404` |
+
+RF-14 (gestión de usuarios del sistema): todos los endpoints exigen rol
+`administrador` (ver matriz de RF-02). `src/models/usuario.model.js` nunca devuelve
+`password_hash` salvo en `findByEmailConHash`, usado únicamente por el login y por la
+validación de email duplicado. Las contraseñas se hashean con `bcrypt` (10 rounds),
+igual que en `seedAdmin.js`. Frontend: página `/usuarios` (enlace "Usuarios" en la barra
+de navegación, visible solo para `administrador`). Pruebas en `tests/usuarios.test.js`.
 
 Cada nuevo RF debe agregar su tabla de endpoints aquí (método, ruta, body esperado,
 respuesta) al completarse.

@@ -12,7 +12,11 @@ function ReporteAsistencia() {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    listarEmpleados().then(setEmpleados);
+    // Un Gerente no puede listar empleados (RF-02): el selector queda solo con la
+    // opción "Todos (consolidado)", que sigue estando disponible para su rol.
+    listarEmpleados()
+      .then(setEmpleados)
+      .catch(() => setEmpleados([]));
   }, []);
 
   async function handleGenerar(e) {

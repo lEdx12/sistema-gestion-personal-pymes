@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
+import { useAuth } from '../context/useAuth';
 import {
   descargarLiquidacionPdf,
   generarLiquidacion,
@@ -12,6 +13,8 @@ function formatearMonto(valor) {
 
 function Liquidaciones() {
   const { empleadoId } = useParams();
+  const { usuario } = useAuth();
+  const esAdministrador = usuario?.rol === 'administrador';
   const [historial, setHistorial] = useState(null);
   const [periodo, setPeriodo] = useState('');
   const [desde, setDesde] = useState('');
@@ -66,20 +69,22 @@ function Liquidaciones() {
   return (
     <div>
       <p>
-        <Link to="/empleados">← Volver a empleados</Link>
+        <Link to={esAdministrador ? '/empleados' : '/'}>← Volver</Link>
       </p>
       <h1>Liquidaciones del empleado #{empleadoId}</h1>
 
       <div className="toolbar">
-        <form onSubmit={handleGenerar} className="card" style={{ display: 'grid', gap: '0.5rem', flex: '1 1 260px' }}>
-          <h2>Generar liquidación</h2>
-          <label style={{ display: 'flex', flexDirection: 'column', fontSize: '0.85em', gap: '0.15rem' }}>
-            Período
-            <input type="month" value={periodo} onChange={(e) => setPeriodo(e.target.value)} required />
-          </label>
-          {error && <p className="field-error">{error}</p>}
-          <button type="submit">Generar liquidación</button>
-        </form>
+        {esAdministrador && (
+          <form onSubmit={handleGenerar} className="card" style={{ display: 'grid', gap: '0.5rem', flex: '1 1 260px' }}>
+            <h2>Generar liquidación</h2>
+            <label style={{ display: 'flex', flexDirection: 'column', fontSize: '0.85em', gap: '0.15rem' }}>
+              Período
+              <input type="month" value={periodo} onChange={(e) => setPeriodo(e.target.value)} required />
+            </label>
+            {error && <p className="field-error">{error}</p>}
+            <button type="submit">Generar liquidación</button>
+          </form>
+        )}
 
         <form onSubmit={handleFiltrar} className="card" style={{ display: 'grid', gap: '0.5rem', flex: '1 1 260px' }}>
           <h2>Filtrar historial por fecha</h2>

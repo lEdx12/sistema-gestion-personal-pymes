@@ -1,0 +1,179 @@
+import { useCallback, useEffect, useState } from 'react';
+import UsuarioForm from '../components/UsuarioForm';
+import {
+  listarUsuarios,
+  crearUsuario,
+  actualizarUsuario,
+  cambiarPasswordUsuario,
+  desactivarUsuario,
+  reactivarUsuario,
+} from '../services/usuarios.service';
+
+function Usuarios() {
+  const [usuarios, setUsuarios] = useState([]);
+  const [error, setError] = useState(null);
+  const [mostrarInactivos, setMostrarInactivos] = useState(false);
+  const [usuarioEditando, setUsuarioEditando] = useState(null);
+  const [cambiandoPasswordId, setCambiandoPasswordId] = useState(null);
+  const [nuevaPassword, setNuevaPassword] = useState('');
+  const [errorPassword, setErrorPassword] = useState(null);
+
+  const cargar = useCallback(async () => {
+    const data = await listarUsuarios(mostrarInactivos);
+    setUsuarios(data);
+  }, [mostrarInactivos]);
+
+  useEffect(() => {
+    cargar();
+  }, [cargar]);
+
+  async function handleGuardar(form) {
+    setError(null);
+    try {
+      if (usuarioEditando) {
+        await actualizarUsuario(usuarioEditando.id, form);
+        setUsuarioEditando(null);
+      } else {
+        await crearUsuario(form);
+      }
+      await cargar();
+      return true;
+    } catch (err) {
+      setError(
+        err.response?.data?.error ||
+          (usuarioEditando ? 'Error al actualizar el usuario' : 'Error al crear el usuario'),
+      );
+      return false;
+    }
+  }
+
+  function handleEditar(usuario) {
+    setError(null);
+    setUsuarioEditando(usuario);
+  }
+
+  function handleCancelarEdicion() {
+    setError(null);
+    setUsuarioEditando(null);
+  }
+
+  async function handleDesactivar(id) {
+    await desactivarUsuario(id);
+    await cargar();
+  }
+
+  async function handleReactivar(id) {
+    await reactivarUsuario(id);
+    await cargar();
+  }
+
+  function handleAbrirCambioPassword(id) {
+    setErrorPassword(null);
+    setNuevaPassword('');
+    setCambiandoPasswordId(id);
+  }
+
+  async function handleGuardarPassword(e) {
+    e.preventDefault();
+    setErrorPassword(null);
+    try {
+      await cambiarPasswordUsuario(cambiandoPasswordId, nuevaPassword);
+      setCambiandoPasswordId(null);
+      setNuevaPassword('');
+    } catch (err) {
+      setErrorPassword(err.response?.data?.error || 'Error al cambiar la contraseña');
+    }
+  }
+
+  return (
+    <div>
+      <h1>Usuarios del sistema</h1>
+
+      <div className="card" style={{ marginBottom: '1.5rem' }}>
+        <h2>{usuarioEditando ? `Editar usuario: ${usuarioEditando.email}` : 'Crear usuario'}</h2>
+        <UsuarioForm
+          onSubmit={handleGuardar}
+          error={error}
+          usuario={usuarioEditando}
+          onCancelar={handleCancelarEdicion}
+        />
+      </div>
+
+      <label style={{ display: 'block', marginBottom: '0.75rem' }}>
+        <input
+          type="checkbox"
+          checked={mostrarInactivos}
+          onChange={(e) => setMostrarInactivos(e.target.checked)}
+          style={{ width: 'auto', marginRight: '0.4rem' }}
+        />
+        Mostrar usuarios inactivos
+      </label>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Nombre</th>
+            <th>Email</th>
+            <th>Rol</th>
+            <th>Estado</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {usuarios.map((u) => (
+            <tr key={u.id}>
+              <td>{u.nombre}</td>
+              <td>{u.email}</td>
+              <td>{u.rol}</td>
+              <td>
+                <span className={`status-badge ${u.activo ? 'ok' : 'off'}`}>
+                  {u.activo ? 'Activo' : 'Inactivo'}
+                </span>
+              </td>
+              <td>
+                <button type="button" onClick={() => handleEditar(u)}>
+                  Editar
+                </button>{' '}
+                <button type="button" onClick={() => handleAbrirCambioPassword(u.id)}>
+                  Cambiar contraseña
+                </button>{' '}
+                {u.activo ? (
+                  <button type="button" onClick={() => handleDesactivar(u.id)}>
+                    Desactivar
+                  </button>
+                ) : (
+                  <button type="button" onClick={() => handleReactivar(u.id)}>
+                    Reactivar
+                  </button>
+                )}
+                {cambiandoPasswordId === u.id && (
+                  <form
+                    onSubmit={handleGuardarPassword}
+                    style={{ display: 'flex', gap: '0.4rem', marginTop: '0.4rem', alignItems: 'center' }}
+                  >
+                    <input
+                      type="password"
+                      placeholder="Nueva contraseña"
+                      value={nuevaPassword}
+                      onChange={(e) => setNuevaPassword(e.target.value)}
+                      minLength={8}
+                      required
+                      style={{ maxWidth: 160 }}
+                    />
+                    <button type="submit">Guardar</button>
+                    <button type="button" onClick={() => setCambiandoPasswordId(null)}>
+                      Cancelar
+                    </button>
+                    {errorPassword && <span className="field-error" style={{ fontSize: '0.85em' }}>{errorPassword}</span>}
+                  </form>
+                )}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+export default Usuarios;

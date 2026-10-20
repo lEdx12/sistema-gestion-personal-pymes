@@ -27,7 +27,11 @@ function Home() {
       )}
       {!health && !error && <p>Conectando al backend...</p>}
       <p>
-        <Link to="/empleados">Ir a Empleados →</Link>
+        {usuario?.rol === 'administrador' ? (
+          <Link to="/empleados">Ir a Empleados →</Link>
+        ) : (
+          <Link to="/reportes/asistencia">Ir a Reportes →</Link>
+        )}
       </p>
     </div>
   );

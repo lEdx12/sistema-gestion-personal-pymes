@@ -2,8 +2,12 @@ const express = require('express');
 const controller = require('../controllers/contratos.controller');
 const subirDocumentoContrato = require('../middleware/uploadContrato');
 const contratosService = require('../services/contratos.service');
+const { permitirRoles } = require('../middleware/roles');
 
 const router = express.Router();
+
+// RF-02: igual que empleados, fuera del alcance de solo lectura del Gerente.
+router.use(permitirRoles('administrador'));
 
 /** Verifica que el contrato exista antes de aceptar el archivo, para no escribirlo en disco en vano. */
 async function verificarContratoExiste(req, res, next) {

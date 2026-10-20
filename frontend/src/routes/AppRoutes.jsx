@@ -1,6 +1,7 @@
 import { Routes, Route } from 'react-router-dom';
 import Layout from '../components/Layout';
 import RequireAuth from '../components/RequireAuth';
+import RequireRole from '../components/RequireRole';
 import Login from '../pages/Login';
 import Home from '../pages/Home';
 import Empleados from '../pages/Empleados';
@@ -8,6 +9,7 @@ import Contratos from '../pages/Contratos';
 import Asistencia from '../pages/Asistencia';
 import Liquidaciones from '../pages/Liquidaciones';
 import ReporteAsistencia from '../pages/ReporteAsistencia';
+import Usuarios from '../pages/Usuarios';
 
 function AppRoutes() {
   return (
@@ -16,9 +18,15 @@ function AppRoutes() {
       <Route element={<RequireAuth />}>
         <Route element={<Layout />}>
           <Route path="/" element={<Home />} />
-          <Route path="/empleados" element={<Empleados />} />
-          <Route path="/empleados/:empleadoId/contratos" element={<Contratos />} />
-          <Route path="/empleados/:empleadoId/asistencia" element={<Asistencia />} />
+          {/* RF-02: empleados/contratos/asistencia no son los "reportes, liquidaciones
+              e historial" de solo lectura del Gerente (sección 3 de PROJECT.md) — el
+              backend ya los rechaza para ese rol y aquí se ocultan del lado cliente. */}
+          <Route element={<RequireRole roles={['administrador']} />}>
+            <Route path="/empleados" element={<Empleados />} />
+            <Route path="/empleados/:empleadoId/contratos" element={<Contratos />} />
+            <Route path="/empleados/:empleadoId/asistencia" element={<Asistencia />} />
+            <Route path="/usuarios" element={<Usuarios />} />
+          </Route>
           <Route path="/empleados/:empleadoId/liquidaciones" element={<Liquidaciones />} />
           <Route path="/reportes/asistencia" element={<ReporteAsistencia />} />
         </Route>
