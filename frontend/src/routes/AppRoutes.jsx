@@ -11,6 +11,7 @@ import Liquidaciones from '../pages/Liquidaciones';
 import ReporteAsistencia from '../pages/ReporteAsistencia';
 import Usuarios from '../pages/Usuarios';
 import Alertas from '../pages/Alertas';
+import Documentos from '../pages/Documentos';
 
 function AppRoutes() {
   return (
@@ -26,6 +27,7 @@ function AppRoutes() {
             <Route path="/empleados" element={<Empleados />} />
             <Route path="/empleados/:empleadoId/contratos" element={<Contratos />} />
             <Route path="/empleados/:empleadoId/asistencia" element={<Asistencia />} />
+            <Route path="/empleados/:empleadoId/documentos" element={<Documentos />} />
             <Route path="/usuarios" element={<Usuarios />} />
             <Route path="/alertas" element={<Alertas />} />
           </Route>

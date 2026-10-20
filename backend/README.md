@@ -267,6 +267,29 @@ scheduler. Frontend: página `/alertas` (enlace "Alertas" en la barra de navegac
 solo para `administrador`, igual que empleados/contratos/usuarios — ver matriz de
 RF-02). Pruebas en `tests/alertas.test.js`.
 
+| Método | Ruta | Query/Body | Respuesta |
+|--------|------|------------|-----------|
+| GET | `/api/documentos` | query `empleado_id` (obligatorio) | `200` lista de documentos del empleado, más reciente primero / `400` / `404` empleado no existe |
+| POST | `/api/documentos` | `multipart/form-data`: `empleado_id`, campo `documento` (PDF/PNG/JPG, máx. 10MB), `tipo?` (texto libre) | `201` documento creado / `400` validación o tipo de archivo no permitido / `404` empleado no existe |
+| DELETE | `/api/documentos/:id` | — | `204` / `404` |
+
+RF-11 (repositorio de documentos — **Sprint 4**): a diferencia del documento de
+contrato (RF-04) y el PDF de liquidación (RF-10), que quedaron en disco local como
+solución provisional, este RF integra el Cloud Storage real que define la sección 2
+de `PROJECT.md`. `src/services/almacenamiento.service.js` es la única pieza que sabe
+dónde vive un archivo: si `CLOUDINARY_URL` está configurado en el entorno, sube a
+Cloudinary (plan gratuito); si no, cae a disco local
+(`backend/uploads/documentos`, servido vía `/uploads`) **sin necesidad de crear una
+cuenta externa** para desarrollar o correr los tests (RNF-08: portabilidad, ningún
+proveedor hardcodeado). El multer de este endpoint usa almacenamiento en memoria
+(`src/middleware/uploadDocumento.js`) en vez de disco, para poder entregarle el buffer
+a `almacenamiento.service.js` sin importar el destino final. Al eliminar un documento
+también se intenta borrar el archivo subyacente (best-effort: si falla, igual se borra
+la fila en BD). Frontend: página `/empleados/:id/documentos` (enlace "Documentos" en
+la ficha de cada empleado), exclusiva de Administrador (RF-02). Pruebas en
+`tests/documentos.test.js` (corren contra el fallback local, ya que el entorno de
+tests no tiene credenciales de Cloudinary).
+
 Cada nuevo RF debe agregar su tabla de endpoints aquí (método, ruta, body esperado,
 respuesta) al completarse.
 

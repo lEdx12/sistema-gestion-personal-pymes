@@ -121,6 +121,7 @@ function Empleados() {
                 <Link to={`/empleados/${emp.id}/contratos`}>Contratos</Link>{' '}
                 <Link to={`/empleados/${emp.id}/asistencia`}>Asistencia</Link>{' '}
                 <Link to={`/empleados/${emp.id}/liquidaciones`}>Liquidaciones</Link>{' '}
+                <Link to={`/empleados/${emp.id}/documentos`}>Documentos</Link>{' '}
                 {emp.activo ? (
                   <button type="button" onClick={() => handleDesactivar(emp.id)}>
                     Desactivar
