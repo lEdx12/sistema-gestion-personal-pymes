@@ -60,7 +60,7 @@ function UsuarioForm({ onSubmit, error, usuario, onCancelar }) {
       <div className="form-actions">
         <button type="submit">{esEdicion ? 'Guardar cambios' : 'Crear usuario'}</button>
         {esEdicion && (
-          <button type="button" onClick={onCancelar}>
+          <button type="button" className="btn-ghost" onClick={onCancelar}>
             Cancelar
           </button>
         )}

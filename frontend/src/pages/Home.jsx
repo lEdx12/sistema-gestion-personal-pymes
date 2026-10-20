@@ -115,7 +115,7 @@ function DashboardAdministrador() {
 function DashboardGerente() {
   return (
     <div className="dashboard-grid">
-      <Link to="/reportes/asistencia" className="card" style={{ display: 'block' }}>
+      <Link to="/reportes/asistencia" className="card card-clickable" style={{ display: 'block' }}>
         <h2>
           <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <IconFileText width={20} height={20} /> Reportes de asistencia

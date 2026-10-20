@@ -114,3 +114,77 @@ export function IconAlertTriangle(props) {
     </svg>
   );
 }
+
+export function IconEdit(props) {
+  return (
+    <svg {...base} {...props}>
+      <path d="M12.3 3.3a1.5 1.5 0 0 1 2.1 0l2.3 2.3a1.5 1.5 0 0 1 0 2.1L7.2 17.2l-4 .9.9-4Z" />
+      <path d="M11 4.6 15.4 9" />
+    </svg>
+  );
+}
+
+export function IconPower(props) {
+  return (
+    <svg {...base} {...props}>
+      <path d="M10 2.8v6.4" />
+      <path d="M5.8 5.3a6.3 6.3 0 1 0 8.4 0" />
+    </svg>
+  );
+}
+
+export function IconKey(props) {
+  return (
+    <svg {...base} {...props}>
+      <circle cx="6.3" cy="13.7" r="3.2" />
+      <path d="M8.5 11.5 15.5 4.5" />
+      <path d="M13 7l2 2M15.7 4.3l2 2" />
+    </svg>
+  );
+}
+
+export function IconEye(props) {
+  return (
+    <svg {...base} {...props}>
+      <path d="M1.8 10S4.8 4.3 10 4.3 18.2 10 18.2 10 15.2 15.7 10 15.7 1.8 10 1.8 10Z" />
+      <circle cx="10" cy="10" r="2.3" />
+    </svg>
+  );
+}
+
+export function IconTrash(props) {
+  return (
+    <svg {...base} {...props}>
+      <path d="M3.5 5.5h13" />
+      <path d="M7.8 5.5V4a1 1 0 0 1 1-1h2.4a1 1 0 0 1 1 1v1.5" />
+      <path d="M5.3 5.5 6 16a1.3 1.3 0 0 0 1.3 1.2h5.4A1.3 1.3 0 0 0 14 16l.7-10.5" />
+      <path d="M8.3 8.8v4.6M11.7 8.8v4.6" />
+    </svg>
+  );
+}
+
+export function IconUpload(props) {
+  return (
+    <svg {...base} {...props}>
+      <path d="M10 13V4.5" />
+      <path d="M6.8 7.3 10 4l3.2 3.3" />
+      <path d="M3.5 13.3V15a1.5 1.5 0 0 0 1.5 1.5h10a1.5 1.5 0 0 0 1.5-1.5v-1.7" />
+    </svg>
+  );
+}
+
+export function IconCheck(props) {
+  return (
+    <svg {...base} {...props}>
+      <path d="M3.5 10.5 7.5 14.5 16.5 5.5" />
+    </svg>
+  );
+}
+
+export function IconPlus(props) {
+  return (
+    <svg {...base} {...props}>
+      <path d="M10 4v12M4 10h12" />
+    </svg>
+  );
+}

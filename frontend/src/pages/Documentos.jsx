@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { API_ORIGIN } from '../services/api';
 import { listarDocumentos, subirDocumento, eliminarDocumento } from '../services/documentos.service';
+import { IconEye, IconTrash } from '../components/icons';
 
 function resolverUrl(url) {
   return url.startsWith('http') ? url : `${API_ORIGIN}${url}`;
@@ -100,12 +101,25 @@ function Documentos() {
                   <td>{d.tipo}</td>
                   <td>{d.created_at?.slice(0, 10)}</td>
                   <td>
-                    <a href={resolverUrl(d.url)} target="_blank" rel="noreferrer">
-                      Ver
-                    </a>{' '}
-                    <button type="button" onClick={() => handleEliminar(d.id)}>
-                      Eliminar
-                    </button>
+                    <div className="row-actions">
+                      <a
+                        className="btn-icon"
+                        href={resolverUrl(d.url)}
+                        target="_blank"
+                        rel="noreferrer"
+                        title="Ver documento"
+                      >
+                        <IconEye />
+                      </a>
+                      <button
+                        type="button"
+                        className="btn-icon btn-danger"
+                        onClick={() => handleEliminar(d.id)}
+                        title="Eliminar"
+                      >
+                        <IconTrash />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}

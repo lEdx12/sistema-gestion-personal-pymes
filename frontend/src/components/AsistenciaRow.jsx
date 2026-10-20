@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { IconEdit } from './icons';
 
 function valoresIniciales(registro) {
   return {
@@ -83,10 +84,10 @@ function AsistenciaRow({ registro, onMarcarSalida, onActualizar }) {
               placeholder="Justificación"
               style={{ flex: 1, minWidth: '140px' }}
             />
-            <button type="button" onClick={handleGuardar}>
+            <button type="button" className="btn-primary" onClick={handleGuardar}>
               Guardar
             </button>
-            <button type="button" onClick={() => setEditando(false)}>
+            <button type="button" className="btn-ghost" onClick={() => setEditando(false)}>
               Cancelar
             </button>
           </div>
@@ -109,22 +110,24 @@ function AsistenciaRow({ registro, onMarcarSalida, onActualizar }) {
       </td>
       <td>{registro.justificacion || ''}</td>
       <td>
-        {puedeMarcarSalida && (
-          <>
-            <input
-              type="time"
-              value={horaSalida}
-              onChange={(e) => setHoraSalida(e.target.value)}
-              style={{ width: '6rem' }}
-            />
-            <button type="button" onClick={handleSalida}>
-              Marcar salida
-            </button>{' '}
-          </>
-        )}
-        <button type="button" onClick={handleEditar}>
-          Editar
-        </button>
+        <div className="row-actions">
+          {puedeMarcarSalida && (
+            <>
+              <input
+                type="time"
+                value={horaSalida}
+                onChange={(e) => setHoraSalida(e.target.value)}
+                style={{ width: '6rem' }}
+              />
+              <button type="button" onClick={handleSalida}>
+                Marcar salida
+              </button>
+            </>
+          )}
+          <button type="button" className="btn-icon" onClick={handleEditar} title="Editar">
+            <IconEdit />
+          </button>
+        </div>
       </td>
     </tr>
   );

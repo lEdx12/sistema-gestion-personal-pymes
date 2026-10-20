@@ -79,7 +79,7 @@ function ReporteAsistencia() {
                 <th>Fecha</th>
                 <th>Entrada</th>
                 <th>Salida</th>
-                <th>Horas trabajadas</th>
+                <th className="num">Horas trabajadas</th>
                 <th>Ausente</th>
                 <th>Justificación</th>
               </tr>
@@ -90,7 +90,7 @@ function ReporteAsistencia() {
                   <td>{r.fecha?.slice(0, 10)}</td>
                   <td>{r.ausente ? '—' : r.hora_entrada?.slice(0, 5) || '—'}</td>
                   <td>{r.ausente ? '—' : r.hora_salida?.slice(0, 5) || '—'}</td>
-                  <td>{r.horas_trabajadas ?? '—'}</td>
+                  <td className="num">{r.horas_trabajadas ?? '—'}</td>
                   <td>
                     <span className={`status-badge ${r.ausente ? 'off' : 'ok'}`}>{r.ausente ? 'Sí' : 'No'}</span>
                   </td>
@@ -115,10 +115,10 @@ function ReporteAsistencia() {
                 <tr>
                   <th>RUT</th>
                   <th>Nombre</th>
-                  <th>Días trabajados</th>
-                  <th>Días de ausencia</th>
-                  <th>Horas totales</th>
-                  <th>Horas de sobrejornada</th>
+                  <th className="num">Días trabajados</th>
+                  <th className="num">Días de ausencia</th>
+                  <th className="num">Horas totales</th>
+                  <th className="num">Horas de sobrejornada</th>
                 </tr>
               </thead>
               <tbody>
@@ -128,10 +128,10 @@ function ReporteAsistencia() {
                     <td>
                       {e.nombre} {e.apellido}
                     </td>
-                    <td>{e.diasTrabajados}</td>
-                    <td>{e.diasAusentes}</td>
-                    <td>{e.totalHoras}</td>
-                    <td>{e.horasSobrejornada}</td>
+                    <td className="num">{e.diasTrabajados}</td>
+                    <td className="num">{e.diasAusentes}</td>
+                    <td className="num">{e.totalHoras}</td>
+                    <td className="num">{e.horasSobrejornada}</td>
                   </tr>
                 ))}
               </tbody>

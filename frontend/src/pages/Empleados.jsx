@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import EmpleadoForm from '../components/EmpleadoForm';
+import { IconEdit, IconFileText, IconClock, IconCash, IconFolder, IconPower } from '../components/icons';
 import {
   listarEmpleados,
   crearEmpleado,
@@ -123,29 +124,54 @@ function Empleados() {
                     {emp.nombre} {emp.apellido}
                   </td>
                   <td>{emp.cargo}</td>
-                  <td>${formatearMonto(emp.sueldo_base)}</td>
+                  <td className="num">${formatearMonto(emp.sueldo_base)}</td>
                   <td>
                     <span className={`status-badge ${emp.activo ? 'ok' : 'off'}`}>
                       {emp.activo ? 'Activo' : 'Inactivo'}
                     </span>
                   </td>
                   <td>
-                    <button type="button" onClick={() => handleEditar(emp)}>
-                      Editar
-                    </button>{' '}
-                    <Link to={`/empleados/${emp.id}/contratos`}>Contratos</Link>{' '}
-                    <Link to={`/empleados/${emp.id}/asistencia`}>Asistencia</Link>{' '}
-                    <Link to={`/empleados/${emp.id}/liquidaciones`}>Liquidaciones</Link>{' '}
-                    <Link to={`/empleados/${emp.id}/documentos`}>Documentos</Link>{' '}
-                    {emp.activo ? (
-                      <button type="button" onClick={() => handleDesactivar(emp.id)}>
-                        Desactivar
+                    <div className="row-actions">
+                      <button
+                        type="button"
+                        className="btn-icon"
+                        onClick={() => handleEditar(emp)}
+                        title="Editar"
+                      >
+                        <IconEdit />
                       </button>
-                    ) : (
-                      <button type="button" onClick={() => handleReactivar(emp.id)}>
-                        Reactivar
-                      </button>
-                    )}
+                      <Link className="btn-icon" to={`/empleados/${emp.id}/contratos`} title="Contratos">
+                        <IconFileText />
+                      </Link>
+                      <Link className="btn-icon" to={`/empleados/${emp.id}/asistencia`} title="Asistencia">
+                        <IconClock />
+                      </Link>
+                      <Link className="btn-icon" to={`/empleados/${emp.id}/liquidaciones`} title="Liquidaciones">
+                        <IconCash />
+                      </Link>
+                      <Link className="btn-icon" to={`/empleados/${emp.id}/documentos`} title="Documentos">
+                        <IconFolder />
+                      </Link>
+                      {emp.activo ? (
+                        <button
+                          type="button"
+                          className="btn-icon btn-danger"
+                          onClick={() => handleDesactivar(emp.id)}
+                          title="Desactivar"
+                        >
+                          <IconPower />
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          className="btn-icon"
+                          onClick={() => handleReactivar(emp.id)}
+                          title="Reactivar"
+                        >
+                          <IconPower />
+                        </button>
+                      )}
+                    </div>
                   </td>
                 </tr>
               ))}

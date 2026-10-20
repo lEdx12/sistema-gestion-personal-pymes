@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { listarAlertas, marcarAlertaLeida, generarAlertas } from '../services/alertas.service';
+import { IconCheck } from '../components/icons';
 
 function formatearFecha(fecha) {
   return fecha?.slice(0, 10);
@@ -45,7 +46,7 @@ function Alertas() {
           <h1>Alertas de vencimiento de contratos</h1>
           <p className="page-subtitle">Contratos a plazo fijo próximos a vencer.</p>
         </div>
-        <button type="button" onClick={handleGenerar} disabled={generando}>
+        <button type="button" className="btn-primary" onClick={handleGenerar} disabled={generando}>
           {generando ? 'Revisando...' : 'Revisar vencimientos ahora'}
         </button>
       </div>
@@ -93,8 +94,13 @@ function Alertas() {
                   </td>
                   <td>
                     {!a.leida && (
-                      <button type="button" onClick={() => handleMarcarLeida(a.id)}>
-                        Marcar como leída
+                      <button
+                        type="button"
+                        className="btn-icon"
+                        onClick={() => handleMarcarLeida(a.id)}
+                        title="Marcar como leída"
+                      >
+                        <IconCheck />
                       </button>
                     )}
                   </td>

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import UsuarioForm from '../components/UsuarioForm';
+import { IconEdit, IconKey, IconPower } from '../components/icons';
 import {
   listarUsuarios,
   crearUsuario,
@@ -135,28 +136,47 @@ function Usuarios() {
             <tr key={u.id}>
               <td>{u.nombre}</td>
               <td>{u.email}</td>
-              <td>{u.rol}</td>
+              <td>
+                <span className="status-badge muted">{u.rol}</span>
+              </td>
               <td>
                 <span className={`status-badge ${u.activo ? 'ok' : 'off'}`}>
                   {u.activo ? 'Activo' : 'Inactivo'}
                 </span>
               </td>
               <td>
-                <button type="button" onClick={() => handleEditar(u)}>
-                  Editar
-                </button>{' '}
-                <button type="button" onClick={() => handleAbrirCambioPassword(u.id)}>
-                  Cambiar contraseña
-                </button>{' '}
-                {u.activo ? (
-                  <button type="button" onClick={() => handleDesactivar(u.id)}>
-                    Desactivar
+                <div className="row-actions">
+                  <button type="button" className="btn-icon" onClick={() => handleEditar(u)} title="Editar">
+                    <IconEdit />
                   </button>
-                ) : (
-                  <button type="button" onClick={() => handleReactivar(u.id)}>
-                    Reactivar
+                  <button
+                    type="button"
+                    className="btn-icon"
+                    onClick={() => handleAbrirCambioPassword(u.id)}
+                    title="Cambiar contraseña"
+                  >
+                    <IconKey />
                   </button>
-                )}
+                  {u.activo ? (
+                    <button
+                      type="button"
+                      className="btn-icon btn-danger"
+                      onClick={() => handleDesactivar(u.id)}
+                      title="Desactivar"
+                    >
+                      <IconPower />
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      className="btn-icon"
+                      onClick={() => handleReactivar(u.id)}
+                      title="Reactivar"
+                    >
+                      <IconPower />
+                    </button>
+                  )}
+                </div>
                 {cambiandoPasswordId === u.id && (
                   <form
                     onSubmit={handleGuardarPassword}
@@ -172,7 +192,7 @@ function Usuarios() {
                       style={{ maxWidth: 160 }}
                     />
                     <button type="submit">Guardar</button>
-                    <button type="button" onClick={() => setCambiandoPasswordId(null)}>
+                    <button type="button" className="btn-ghost" onClick={() => setCambiandoPasswordId(null)}>
                       Cancelar
                     </button>
                     {errorPassword && <span className="field-error" style={{ fontSize: '0.85em' }}>{errorPassword}</span>}

@@ -117,7 +117,7 @@ function EmpleadoForm({ onSubmit, error, empleado, onCancelar }) {
       <div className="form-actions">
         <button type="submit">{esEdicion ? 'Guardar cambios' : 'Registrar empleado'}</button>
         {esEdicion && (
-          <button type="button" onClick={onCancelar}>
+          <button type="button" className="btn-ghost" onClick={onCancelar}>
             Cancelar
           </button>
         )}

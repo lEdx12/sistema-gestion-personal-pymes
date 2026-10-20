@@ -127,15 +127,15 @@ function Liquidaciones() {
             <thead>
               <tr>
                 <th>Período</th>
-                <th>Sueldo base</th>
-                <th>Horas extra</th>
-                <th>Gratificación</th>
-                <th>Desc. AFP</th>
-                <th>Desc. salud</th>
-                <th>Desc. cesantía</th>
-                <th>Total haberes</th>
-                <th>Total descuentos</th>
-                <th>Líquido a pagar</th>
+                <th className="num">Sueldo base</th>
+                <th className="num">Horas extra</th>
+                <th className="num">Gratificación</th>
+                <th className="num">Desc. AFP</th>
+                <th className="num">Desc. salud</th>
+                <th className="num">Desc. cesantía</th>
+                <th className="num">Total haberes</th>
+                <th className="num">Total descuentos</th>
+                <th className="num">Líquido a pagar</th>
                 <th></th>
               </tr>
             </thead>
@@ -143,15 +143,15 @@ function Liquidaciones() {
               {historial.liquidaciones.map((l) => (
                 <tr key={l.id}>
                   <td>{l.periodo}</td>
-                  <td>${formatearMonto(l.sueldo_base)}</td>
-                  <td>${formatearMonto(l.horas_extra_monto)}</td>
-                  <td>${formatearMonto(l.gratificacion)}</td>
-                  <td>${formatearMonto(l.descuento_afp)}</td>
-                  <td>${formatearMonto(l.descuento_salud)}</td>
-                  <td>${formatearMonto(l.descuento_cesantia)}</td>
-                  <td>${formatearMonto(l.total_haberes)}</td>
-                  <td>${formatearMonto(l.total_descuentos)}</td>
-                  <td>
+                  <td className="num">${formatearMonto(l.sueldo_base)}</td>
+                  <td className="num">${formatearMonto(l.horas_extra_monto)}</td>
+                  <td className="num">${formatearMonto(l.gratificacion)}</td>
+                  <td className="num">${formatearMonto(l.descuento_afp)}</td>
+                  <td className="num">${formatearMonto(l.descuento_salud)}</td>
+                  <td className="num">${formatearMonto(l.descuento_cesantia)}</td>
+                  <td className="num">${formatearMonto(l.total_haberes)}</td>
+                  <td className="num">${formatearMonto(l.total_descuentos)}</td>
+                  <td className="num">
                     <strong>${formatearMonto(l.liquido_pagar)}</strong>
                   </td>
                   <td>
