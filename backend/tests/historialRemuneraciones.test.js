@@ -2,14 +2,14 @@ const request = require('supertest');
 const app = require('../src/app');
 const pool = require('../src/config/db');
 const { obtenerAuthHeader } = require('./helpers/auth');
+const { generarRutDePrueba } = require('./helpers/rut');
 
-const RUT_EMPLEADO = '9418574-2';
+const RUT_EMPLEADO = generarRutDePrueba();
 let empleadoId;
 let authHeader;
 
 beforeAll(async () => {
   authHeader = await obtenerAuthHeader();
-  await pool.query('DELETE FROM empleados WHERE rut = $1', [RUT_EMPLEADO]);
   const res = await request(app)
     .post('/api/empleados')
     .set('Authorization', authHeader)

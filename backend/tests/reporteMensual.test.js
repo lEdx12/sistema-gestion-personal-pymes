@@ -2,14 +2,14 @@ const request = require('supertest');
 const app = require('../src/app');
 const pool = require('../src/config/db');
 const { obtenerAuthHeader } = require('./helpers/auth');
+const { generarRutDePrueba } = require('./helpers/rut');
 
-const RUT_EMPLEADO = '7897654-3';
+const RUT_EMPLEADO = generarRutDePrueba();
 let empleadoId;
 let authHeader;
 
 beforeAll(async () => {
   authHeader = await obtenerAuthHeader();
-  await pool.query('DELETE FROM empleados WHERE rut = $1', [RUT_EMPLEADO]);
   const res = await request(app)
     .post('/api/empleados')
     .set('Authorization', authHeader)
@@ -55,7 +55,7 @@ describe('GET /api/asistencia/reporte-mensual (individual)', () => {
       .query({ empleado_id: empleadoId, periodo: '2026-05' });
 
     expect(res.status).toBe(200);
-    expect(res.body.empleado.rut).toBe('7897654-3');
+    expect(res.body.empleado.rut).toBe(RUT_EMPLEADO);
     expect(res.body.diasTrabajados).toBe(4);
     expect(res.body.diasAusentes).toBe(1);
     expect(res.body.totalHoras).toBe(36); // 4 * 9h

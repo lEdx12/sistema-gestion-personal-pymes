@@ -2,12 +2,14 @@ const request = require('supertest');
 const app = require('../src/app');
 const pool = require('../src/config/db');
 const { obtenerAuthHeader } = require('./helpers/auth');
+const { generarRutDePrueba } = require('./helpers/rut');
 
-const RUT_PRUEBA = '12.345.678-5';
-const RUT_PRUEBA_NORMALIZADO = '12345678-5';
+const RUT_PRUEBA_NORMALIZADO = generarRutDePrueba();
+const RUT_SIN_NOMBRE = generarRutDePrueba();
+const RUT_DESACTIVAR = generarRutDePrueba();
 
 const empleadoValido = {
-  rut: RUT_PRUEBA,
+  rut: RUT_PRUEBA_NORMALIZADO,
   nombre: 'Juana',
   apellido: 'Pérez',
   fecha_ingreso: '2026-01-15',
@@ -19,7 +21,6 @@ let authHeader;
 
 beforeAll(async () => {
   authHeader = await obtenerAuthHeader();
-  await pool.query('DELETE FROM empleados WHERE rut = $1', [RUT_PRUEBA_NORMALIZADO]);
 });
 
 afterAll(async () => {
@@ -60,7 +61,7 @@ describe('POST /api/empleados', () => {
     const res = await request(app)
       .post('/api/empleados')
       .set('Authorization', authHeader)
-      .send({ ...sinNombre, rut: '9.418.574-2' });
+      .send({ ...sinNombre, rut: RUT_SIN_NOMBRE });
     expect(res.status).toBe(400);
   });
 });
@@ -78,7 +79,7 @@ describe('PUT /api/empleados/:id/desactivar', () => {
     const creado = await request(app)
       .post('/api/empleados')
       .set('Authorization', authHeader)
-      .send({ ...empleadoValido, rut: '7.594.890-5' });
+      .send({ ...empleadoValido, rut: RUT_DESACTIVAR });
     const res = await request(app)
       .put(`/api/empleados/${creado.body.id}/desactivar`)
       .set('Authorization', authHeader);
@@ -92,9 +93,9 @@ describe('PUT /api/empleados/:id/desactivar', () => {
     expect(reactivado.body.activo).toBe(true);
 
     const listado = await request(app).get('/api/empleados').set('Authorization', authHeader);
-    expect(listado.body.find((e) => e.rut === '7594890-5')).toBeTruthy();
+    expect(listado.body.find((e) => e.rut === RUT_DESACTIVAR)).toBeTruthy();
 
-    await pool.query('DELETE FROM empleados WHERE rut = $1', ['7594890-5']);
+    await pool.query('DELETE FROM empleados WHERE rut = $1', [RUT_DESACTIVAR]);
   });
 
   it('rechaza reactivar un empleado inexistente', async () => {
