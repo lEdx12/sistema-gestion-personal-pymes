@@ -234,16 +234,32 @@ ajustan según `usuario.rol`. Pruebas en `tests/roles.test.js`.
 | GET | `/api/usuarios/:id` | — | `200` usuario / `404` |
 | POST | `/api/usuarios` | `{ nombre, email, password, rol }` (`rol`: `administrador`\|`gerente`, `password` ≥ 8 caracteres) | `201` usuario creado / `400` validación / `409` email ya registrado |
 | PUT | `/api/usuarios/:id` | `{ nombre, email, rol }` | `200` actualizado / `400` / `404` / `409` email ya usado por otro usuario |
-| PUT | `/api/usuarios/:id/password` | `{ password }` | `204` / `400` / `404` |
+| PUT | `/api/usuarios/:id/password` | `{ password }` | `204` / `400` / `404` — la deja marcada como genérica (`debe_cambiar_password = true`) |
 | PUT | `/api/usuarios/:id/desactivar` | — | `200` usuario con `activo: false` (no puede volver a loguearse) / `404` |
 | PUT | `/api/usuarios/:id/reactivar` | — | `200` usuario con `activo: true` / `404` |
+| PUT | `/api/usuarios/me/password` | `{ password }` | `204` / `400` — self-service, cualquier rol autenticado; deja `debe_cambiar_password = false` |
 
-RF-14 (gestión de usuarios del sistema): todos los endpoints exigen rol
-`administrador` (ver matriz de RF-02). `src/models/usuario.model.js` nunca devuelve
-`password_hash` salvo en `findByEmailConHash`, usado únicamente por el login y por la
-validación de email duplicado. Las contraseñas se hashean con `bcrypt` (10 rounds),
-igual que en `seedAdmin.js`. Frontend: página `/usuarios` (enlace "Usuarios" en la barra
-de navegación, visible solo para `administrador`). Pruebas en `tests/usuarios.test.js`.
+RF-14 (gestión de usuarios del sistema): salvo `PUT /api/usuarios/me/password`, todos
+los endpoints exigen rol `administrador` (ver matriz de RF-02). `src/models/usuario.model.js`
+nunca devuelve `password_hash` salvo en `findByEmailConHash`, usado únicamente por el
+login y por la validación de email duplicado. Las contraseñas se hashean con `bcrypt`
+(10 rounds), igual que en `seedAdmin.js`. Frontend: página `/usuarios` (enlace
+"Usuarios" en la barra de navegación, visible solo para `administrador`). Pruebas en
+`tests/usuarios.test.js`.
+
+**Cambio de contraseña obligatorio en el primer login (migración `002`):** la columna
+`usuarios.debe_cambiar_password` (default `TRUE`) queda en `true` para toda cuenta
+nueva (`POST /api/usuarios`, `npm run seed:admin`) y para toda contraseña que
+restablece un Administrador vía `PUT /api/usuarios/:id/password` — en ambos casos la
+contraseña es "genérica", asignada por otra persona. Solo pasa a `false` cuando el
+propio usuario la cambia con `PUT /api/usuarios/me/password`. `POST /api/auth/login`
+devuelve este campo en `usuario.debe_cambiar_password`; el frontend
+(`RequireAuth.jsx`) redirige a `/cambiar-password` — una pantalla fuera del layout
+normal, sin acceso a ninguna otra ruta — hasta que se complete el cambio. Pensado para
+que el administrador inicial (credenciales de `.env`/`seedAdmin.js`) y cualquier
+cuenta nueva no sigan usando indefinidamente una contraseña que otra persona conoce.
+Pruebas en `tests/usuarios.test.js` (login tras crear usuario, tras restablecer, y el
+flujo self-service con un Gerente).
 
 | Método | Ruta | Query/Body | Respuesta |
 |--------|------|------------|-----------|

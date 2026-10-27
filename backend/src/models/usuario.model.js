@@ -1,6 +1,6 @@
 const pool = require('../config/db');
 
-const COLUMNAS_PUBLICAS = 'id, nombre, email, rol, activo, created_at';
+const COLUMNAS_PUBLICAS = 'id, nombre, email, rol, activo, debe_cambiar_password, created_at';
 
 async function findAll({ incluirInactivos = false } = {}) {
   const where = incluirInactivos ? '' : 'WHERE activo = TRUE';
@@ -13,7 +13,8 @@ async function findAll({ incluirInactivos = false } = {}) {
 /** Incluye password_hash — solo para verificar credenciales en el login. */
 async function findByEmailConHash(email) {
   const { rows } = await pool.query(
-    `SELECT id, nombre, email, password_hash, rol, activo FROM usuarios WHERE email = $1`,
+    `SELECT id, nombre, email, password_hash, rol, activo, debe_cambiar_password
+     FROM usuarios WHERE email = $1`,
     [email],
   );
   return rows[0] || null;
@@ -44,8 +45,16 @@ async function update(id, { nombre, email, rol }) {
   return rows[0] || null;
 }
 
-async function updatePassword(id, password_hash) {
-  await pool.query('UPDATE usuarios SET password_hash = $1 WHERE id = $2', [password_hash, id]);
+/**
+ * debeCambiarPassword decide si la nueva contraseña queda marcada como "genérica" que
+ * hay que volver a cambiar: TRUE cuando la fija un Administrador para otra persona
+ * (restablecimiento), FALSE cuando el propio usuario elige su contraseña.
+ */
+async function updatePassword(id, password_hash, debeCambiarPassword) {
+  await pool.query(
+    'UPDATE usuarios SET password_hash = $1, debe_cambiar_password = $2 WHERE id = $3',
+    [password_hash, debeCambiarPassword, id],
+  );
 }
 
 async function desactivar(id) {

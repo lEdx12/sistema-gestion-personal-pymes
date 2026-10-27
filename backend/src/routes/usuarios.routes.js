@@ -4,7 +4,14 @@ const { permitirRoles } = require('../middleware/roles');
 
 const router = express.Router();
 
-// RF-02 + RF-14: gestionar cuentas de usuario es exclusivo del Administrador.
+// Cambiar la propia contraseña: cualquier usuario autenticado, sin restricción de rol
+// (lo necesita también un Gerente para completar el cambio obligatorio del primer
+// login). Debe registrarse antes del router.use() de abajo y antes de
+// PUT /:id/password, para que Express no la confunda con esa ruta ("me" calzaría
+// como :id).
+router.put('/me/password', controller.cambiarMiPassword);
+
+// RF-02 + RF-14: el resto de la gestión de usuarios es exclusivo del Administrador.
 router.use(permitirRoles('administrador'));
 
 router.get('/', controller.listar);

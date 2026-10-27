@@ -19,6 +19,11 @@ export async function cambiarPasswordUsuario(id, password) {
   await api.put(`/usuarios/${id}/password`, { password });
 }
 
+/** Self-service: el usuario autenticado cambia su propia contraseña. */
+export async function cambiarMiPassword(password) {
+  await api.put('/usuarios/me/password', { password });
+}
+
 export async function desactivarUsuario(id) {
   const { data } = await api.put(`/usuarios/${id}/desactivar`);
   return data;

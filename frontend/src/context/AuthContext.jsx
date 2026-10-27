@@ -36,7 +36,19 @@ export function AuthProvider({ children }) {
     setUsuario(null);
   }, []);
 
+  /** Tras el cambio de contraseña obligatorio del primer login: ya no hace falta volver a loguear. */
+  const marcarPasswordCambiada = useCallback(() => {
+    setUsuario((actual) => {
+      if (!actual) return actual;
+      const actualizado = { ...actual, debe_cambiar_password: false };
+      localStorage.setItem('usuario', JSON.stringify(actualizado));
+      return actualizado;
+    });
+  }, []);
+
   return (
-    <AuthContext.Provider value={{ token, usuario, login, logout }}>{children}</AuthContext.Provider>
+    <AuthContext.Provider value={{ token, usuario, login, logout, marcarPasswordCambiada }}>
+      {children}
+    </AuthContext.Provider>
   );
 }

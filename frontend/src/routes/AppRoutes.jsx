@@ -3,6 +3,7 @@ import Layout from '../components/Layout';
 import RequireAuth from '../components/RequireAuth';
 import RequireRole from '../components/RequireRole';
 import Login from '../pages/Login';
+import CambiarPasswordObligatorio from '../pages/CambiarPasswordObligatorio';
 import Home from '../pages/Home';
 import Empleados from '../pages/Empleados';
 import Contratos from '../pages/Contratos';
@@ -18,6 +19,7 @@ function AppRoutes() {
     <Routes>
       <Route path="/login" element={<Login />} />
       <Route element={<RequireAuth />}>
+        <Route path="/cambiar-password" element={<CambiarPasswordObligatorio />} />
         <Route element={<Layout />}>
           <Route path="/" element={<Home />} />
           {/* RF-02: empleados/contratos/asistencia no son los "reportes, liquidaciones

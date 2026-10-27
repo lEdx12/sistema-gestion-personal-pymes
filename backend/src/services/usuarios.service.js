@@ -64,11 +64,20 @@ async function actualizarUsuario(id, { nombre, email, rol }) {
   return usuarioModel.update(id, { nombre, email, rol });
 }
 
+/** El Administrador restablece la contraseña de otro usuario: queda genérica, debe cambiarla en su próximo login. */
 async function cambiarPassword(id, password) {
   await obtenerUsuario(id);
   validarPassword(password);
   const passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
-  await usuarioModel.updatePassword(id, passwordHash);
+  await usuarioModel.updatePassword(id, passwordHash, true);
+}
+
+/** El propio usuario define su contraseña (incluye el cambio obligatorio del primer login): ya no es genérica. */
+async function cambiarMiPropiaPassword(id, password) {
+  await obtenerUsuario(id);
+  validarPassword(password);
+  const passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
+  await usuarioModel.updatePassword(id, passwordHash, false);
 }
 
 async function desactivarUsuario(id) {
@@ -88,6 +97,7 @@ module.exports = {
   crearUsuario,
   actualizarUsuario,
   cambiarPassword,
+  cambiarMiPropiaPassword,
   desactivarUsuario,
   reactivarUsuario,
 };

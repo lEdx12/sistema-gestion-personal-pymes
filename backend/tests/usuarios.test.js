@@ -10,14 +10,16 @@ const EMAIL_PRUEBA = `usuario-prueba-${Date.now()}-${Math.floor(Math.random() * 
 
 let authHeader;
 let usuarioId;
+let gerenteId;
 
 beforeAll(async () => {
   authHeader = await obtenerAuthHeader();
 });
 
 afterAll(async () => {
-  if (usuarioId) {
-    await pool.query('DELETE FROM usuarios WHERE id = $1', [usuarioId]);
+  const ids = [usuarioId, gerenteId].filter(Boolean);
+  if (ids.length) {
+    await pool.query('DELETE FROM usuarios WHERE id = ANY($1)', [ids]);
   }
   await pool.end();
 });
@@ -32,7 +34,16 @@ describe('POST /api/usuarios', () => {
     expect(res.body.rol).toBe('gerente');
     expect(res.body.activo).toBe(true);
     expect(res.body.password_hash).toBeUndefined();
+    expect(res.body.debe_cambiar_password).toBe(true);
     usuarioId = res.body.id;
+  });
+
+  it('el primer login de un usuario recién creado exige cambiar la contraseña', async () => {
+    const login = await request(app)
+      .post('/api/auth/login')
+      .send({ email: EMAIL_PRUEBA, password: 'Clave1234' });
+    expect(login.status).toBe(200);
+    expect(login.body.usuario.debe_cambiar_password).toBe(true);
   });
 
   it('rechaza un email duplicado', async () => {
@@ -97,7 +108,7 @@ describe('PUT /api/usuarios/:id', () => {
 });
 
 describe('PUT /api/usuarios/:id/password', () => {
-  it('cambia la contraseña y permite loguear con la nueva', async () => {
+  it('cambia la contraseña, permite loguear con la nueva, y vuelve a exigir cambiarla (es genérica)', async () => {
     const res = await request(app)
       .put(`/api/usuarios/${usuarioId}/password`)
       .set('Authorization', authHeader)
@@ -108,6 +119,48 @@ describe('PUT /api/usuarios/:id/password', () => {
       .post('/api/auth/login')
       .send({ email: EMAIL_PRUEBA, password: 'NuevaClave123' });
     expect(login.status).toBe(200);
+    expect(login.body.usuario.debe_cambiar_password).toBe(true);
+  });
+});
+
+describe('PUT /api/usuarios/me/password', () => {
+  it('permite a un Gerente cambiar su propia contraseña y deja de exigir el cambio', async () => {
+    const creado = await request(app)
+      .post('/api/usuarios')
+      .set('Authorization', authHeader)
+      .send({
+        nombre: 'Gerente Self Service',
+        email: `self-${EMAIL_PRUEBA}`,
+        password: 'ClaveInicial1',
+        rol: 'gerente',
+      });
+    gerenteId = creado.body.id;
+
+    const loginInicial = await request(app)
+      .post('/api/auth/login')
+      .send({ email: `self-${EMAIL_PRUEBA}`, password: 'ClaveInicial1' });
+    expect(loginInicial.body.usuario.debe_cambiar_password).toBe(true);
+    const authGerente = `Bearer ${loginInicial.body.token}`;
+
+    const cambio = await request(app)
+      .put('/api/usuarios/me/password')
+      .set('Authorization', authGerente)
+      .send({ password: 'MiNuevaClave1' });
+    expect(cambio.status).toBe(204);
+
+    const loginFinal = await request(app)
+      .post('/api/auth/login')
+      .send({ email: `self-${EMAIL_PRUEBA}`, password: 'MiNuevaClave1' });
+    expect(loginFinal.status).toBe(200);
+    expect(loginFinal.body.usuario.debe_cambiar_password).toBe(false);
+  });
+
+  it('rechaza una contraseña demasiado corta', async () => {
+    const res = await request(app)
+      .put('/api/usuarios/me/password')
+      .set('Authorization', authHeader)
+      .send({ password: '123' });
+    expect(res.status).toBe(400);
   });
 });
 

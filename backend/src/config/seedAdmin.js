@@ -21,10 +21,11 @@ async function seedAdmin() {
   const passwordHash = await bcrypt.hash(password, 10);
 
   await pool.query(
-    `INSERT INTO usuarios (nombre, email, password_hash, rol, activo)
-     VALUES ($1, $2, $3, 'administrador', TRUE)
+    `INSERT INTO usuarios (nombre, email, password_hash, rol, activo, debe_cambiar_password)
+     VALUES ($1, $2, $3, 'administrador', TRUE, TRUE)
      ON CONFLICT (email) DO UPDATE
-       SET password_hash = EXCLUDED.password_hash, nombre = EXCLUDED.nombre, activo = TRUE`,
+       SET password_hash = EXCLUDED.password_hash, nombre = EXCLUDED.nombre, activo = TRUE,
+           debe_cambiar_password = TRUE`,
     [nombre, email, passwordHash],
   );
 

@@ -44,7 +44,13 @@ async function login({ email, password }) {
 
   return {
     token,
-    usuario: { id: usuario.id, nombre: usuario.nombre, email: usuario.email, rol: usuario.rol },
+    usuario: {
+      id: usuario.id,
+      nombre: usuario.nombre,
+      email: usuario.email,
+      rol: usuario.rol,
+      debe_cambiar_password: usuario.debe_cambiar_password,
+    },
   };
 }
 

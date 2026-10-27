@@ -128,6 +128,7 @@ function Usuarios() {
               <th>Email</th>
               <th>Rol</th>
               <th>Estado</th>
+              <th>Contraseña</th>
               <th></th>
             </tr>
           </thead>
@@ -143,6 +144,15 @@ function Usuarios() {
                 <span className={`status-badge ${u.activo ? 'ok' : 'off'}`}>
                   {u.activo ? 'Activo' : 'Inactivo'}
                 </span>
+              </td>
+              <td>
+                {u.debe_cambiar_password ? (
+                  <span className="status-badge warn" title="Todavía no inicia sesión con una contraseña propia">
+                    Pendiente
+                  </span>
+                ) : (
+                  <span className="status-badge muted">Definida</span>
+                )}
               </td>
               <td>
                 <div className="row-actions">

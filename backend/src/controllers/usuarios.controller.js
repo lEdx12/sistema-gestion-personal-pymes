@@ -54,6 +54,16 @@ async function cambiarPassword(req, res) {
   }
 }
 
+/** Self-service: el usuario autenticado cambia su propia contraseña (cualquier rol). */
+async function cambiarMiPassword(req, res) {
+  try {
+    await usuariosService.cambiarMiPropiaPassword(req.user.id, req.body.password);
+    res.status(204).send();
+  } catch (err) {
+    manejarError(res, err);
+  }
+}
+
 async function desactivar(req, res) {
   try {
     const usuario = await usuariosService.desactivarUsuario(req.params.id);
@@ -72,4 +82,13 @@ async function reactivar(req, res) {
   }
 }
 
-module.exports = { listar, obtener, crear, actualizar, cambiarPassword, desactivar, reactivar };
+module.exports = {
+  listar,
+  obtener,
+  crear,
+  actualizar,
+  cambiarPassword,
+  cambiarMiPassword,
+  desactivar,
+  reactivar,
+};
