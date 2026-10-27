@@ -116,7 +116,8 @@ async function obtenerPdfLiquidacion(id) {
   }
 
   const empleado = await empleadoModel.findById(liquidacion.empleado_id);
-  const ruta = await generarPdfLiquidacion(liquidacion, empleado);
+  const contratos = await contratoModel.findAll({ empleadoId: liquidacion.empleado_id });
+  const ruta = await generarPdfLiquidacion(liquidacion, empleado, contratos[0] || null);
   const pdfUrl = `/uploads/liquidaciones/${nombreArchivo(liquidacion)}`;
   await liquidacionModel.actualizarPdfUrl(id, pdfUrl);
 

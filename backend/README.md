@@ -169,12 +169,26 @@ $43.750, cesantía $3.750, líquido a pagar $515.000).
 | GET | `/api/liquidaciones/:id/pdf` | `200` descarga el PDF (`Content-Type: application/pdf`, `Content-Disposition: attachment`) / `404` si la liquidación no existe |
 
 RF-10 (descarga de liquidación en PDF): `src/services/liquidacionPdf.service.js` arma el
-PDF con `pdfkit` (haberes, descuentos y líquido a pagar). Se genera una sola vez por
-liquidación — la primera descarga lo crea en `backend/uploads/liquidaciones/` y guarda
-la ruta en `pdf_url`; las siguientes descargas reutilizan ese archivo en vez de
-regenerarlo (una liquidación ya generada es inmutable, no tiene sentido recalcular el
-PDF). Mismo enfoque de almacenamiento local que RF-04 (se migrará a Cloud Storage en
-RF-11). Pruebas en `tests/liquidaciones.test.js`.
+PDF con `pdfkit`, en el formato clásico de una liquidación de sueldo chilena (encabezado
+con datos de la empresa/trabajador/contrato, resumen de días e imponible, dos columnas
+de haberes y descuentos, totales, y el líquido a pagar escrito en palabras con
+`src/utils/numeroALetras.js`) en vez de un resumen vertical simple, a pedido explícito
+del cliente. Se genera una sola vez por liquidación — la primera descarga lo crea en
+`backend/uploads/liquidaciones/` y guarda la ruta en `pdf_url`; las siguientes descargas
+reutilizan ese archivo en vez de regenerarlo (una liquidación ya generada es inmutable,
+no tiene sentido recalcular el PDF). Mismo enfoque de almacenamiento local que RF-04 (se
+migrará a Cloud Storage en RF-11).
+
+La razón social/RUT de la empresa y los nombres de la AFP e institución de salud que
+aparecen impresos son texto configurable vía `.env` (`EMPRESA_RAZON_SOCIAL`,
+`EMPRESA_RUT`, `AFP_NOMBRE`, `SALUD_NOMBRE`) — el sistema es de una sola PyME y no
+registra a qué AFP/Isapre está afiliado cada trabajador (sección 4 de `PROJECT.md` no
+modela eso), así que es solo texto del comprobante, no afecta ningún cálculo; los
+porcentajes mostrados sí son los configurados para AFP/salud (`DESCUENTO_AFP_PORCENTAJE`,
+`DESCUENTO_SALUD_PORCENTAJE`, ver RF-09). El tipo y fecha de término de contrato
+corresponden al contrato más reciente del empleado (no hay vínculo liquidación↔contrato
+en el esquema). Pruebas en `tests/liquidaciones.test.js` y `tests/numeroALetras.test.js`
+(incluye el mismo monto de un comprobante real como caso de referencia).
 
 | Método | Ruta | Query | Respuesta |
 |--------|------|-------|-----------|

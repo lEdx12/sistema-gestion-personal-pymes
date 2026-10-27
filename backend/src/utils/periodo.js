@@ -43,4 +43,15 @@ function formatearFecha(anio, mes, dia) {
   return `${anio}-${String(mes).padStart(2, '0')}-${String(dia).padStart(2, '0')}`;
 }
 
-module.exports = { esPeriodoValido, rangoDelPeriodo, obtenerBloquesSemanalesDelPeriodo };
+/** Cantidad de días del mes de un período "YYYY-MM" (28-31). */
+function diasDelPeriodo(periodo) {
+  const [anioStr, mesStr] = periodo.split('-');
+  return new Date(Number(anioStr), Number(mesStr), 0).getDate();
+}
+
+module.exports = {
+  esPeriodoValido,
+  rangoDelPeriodo,
+  obtenerBloquesSemanalesDelPeriodo,
+  diasDelPeriodo,
+};
