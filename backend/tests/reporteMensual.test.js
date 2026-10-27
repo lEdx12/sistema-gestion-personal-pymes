@@ -109,7 +109,7 @@ describe('GET /api/asistencia/reporte-mensual/pdf', () => {
     expect(res.status).toBe(200);
     expect(res.headers['content-type']).toBe('application/pdf');
     expect(res.headers['content-disposition']).toContain('attachment');
-    expect(res.headers['content-disposition']).toContain(RUT_EMPLEADO);
+    expect(res.headers['content-disposition']).toContain('noemi-salas');
     expect(res.body.slice(0, 4).toString()).toBe('%PDF');
   });
 

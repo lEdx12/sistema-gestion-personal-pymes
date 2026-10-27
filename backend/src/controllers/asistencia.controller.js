@@ -1,5 +1,6 @@
 const asistenciaService = require('../services/asistencia.service');
 const { generarPdfReporteMensual } = require('../services/reporteAsistenciaPdf.service');
+const { slugificar } = require('../utils/slug');
 
 function manejarError(res, err) {
   if (err.status) {
@@ -95,7 +96,9 @@ async function reporteMensualPdf(req, res) {
   try {
     const { empleado_id, periodo } = req.query;
     const reporte = await asistenciaService.obtenerReporteMensual({ empleadoId: empleado_id, periodo });
-    const identificador = reporte.empleado ? reporte.empleado.rut : 'consolidado';
+    const identificador = reporte.empleado
+      ? `${slugificar(reporte.empleado.nombre)}-${slugificar(reporte.empleado.apellido)}`
+      : 'consolidado';
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader(
       'Content-Disposition',

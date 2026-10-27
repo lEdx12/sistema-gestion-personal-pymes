@@ -1,4 +1,5 @@
 import api from './api';
+import { slugificar } from '../utils/texto';
 
 export async function listarLiquidaciones(empleadoId) {
   const { data } = await api.get('/liquidaciones', { params: { empleado_id: empleadoId } });
@@ -17,12 +18,13 @@ export async function obtenerHistorialRemuneraciones(empleadoId, desde, hasta) {
   return data;
 }
 
-export async function descargarLiquidacionPdf(liquidacionId, periodo) {
+export async function descargarLiquidacionPdf(liquidacionId, periodo, nombreEmpleado) {
   const { data } = await api.get(`/liquidaciones/${liquidacionId}/pdf`, { responseType: 'blob' });
   const url = window.URL.createObjectURL(data);
   const enlace = document.createElement('a');
   enlace.href = url;
-  enlace.download = `liquidacion-${periodo}.pdf`;
+  const sufijoNombre = nombreEmpleado ? `-${slugificar(nombreEmpleado)}` : '';
+  enlace.download = `liquidacion-${periodo}${sufijoNombre}.pdf`;
   document.body.appendChild(enlace);
   enlace.click();
   enlace.remove();

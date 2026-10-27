@@ -50,7 +50,10 @@ function Liquidaciones() {
   async function handleDescargarPdf(liquidacion) {
     setErrorPdf(null);
     try {
-      await descargarLiquidacionPdf(liquidacion.id, liquidacion.periodo);
+      const nombreEmpleado = historial?.empleado
+        ? `${historial.empleado.nombre} ${historial.empleado.apellido}`
+        : undefined;
+      await descargarLiquidacionPdf(liquidacion.id, liquidacion.periodo, nombreEmpleado);
     } catch {
       setErrorPdf('Error al descargar el PDF');
     }

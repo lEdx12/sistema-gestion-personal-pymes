@@ -36,7 +36,11 @@ function ReporteAsistencia() {
     setError(null);
     setDescargando(true);
     try {
-      await descargarReporteMensualPdf({ empleadoId: empleadoId || undefined, periodo });
+      const empleadoSeleccionado = empleados.find((e) => String(e.id) === String(empleadoId));
+      const nombreEmpleado = empleadoSeleccionado
+        ? `${empleadoSeleccionado.nombre} ${empleadoSeleccionado.apellido}`
+        : undefined;
+      await descargarReporteMensualPdf({ empleadoId: empleadoId || undefined, periodo, nombreEmpleado });
     } catch (err) {
       setError(err.response?.data?.error || 'Error al descargar el PDF');
     } finally {

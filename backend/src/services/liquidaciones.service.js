@@ -13,6 +13,7 @@ const {
 } = require('./liquidacionCalculo.service');
 const { generarPdfLiquidacion, rutaArchivo, nombreArchivo } = require('./liquidacionPdf.service');
 const { esPeriodoValido, obtenerBloquesSemanalesDelPeriodo } = require('../utils/periodo');
+const { slugificar } = require('../utils/slug');
 
 class ServiceError extends Error {
   constructor(status, message) {
@@ -110,18 +111,22 @@ async function generarLiquidacion({ empleado_id, periodo, generado_por }) {
  */
 async function obtenerPdfLiquidacion(id) {
   const liquidacion = await obtenerLiquidacion(id);
+  const empleado = await empleadoModel.findById(liquidacion.empleado_id);
+
+  // El nombre del archivo guardado en disco (clave de caché) no cambia, pero el nombre
+  // que ve el usuario al descargar sí incluye al empleado, no solo el período.
+  const nombreDescarga = `liquidacion-${liquidacion.periodo}-${slugificar(empleado.nombre)}-${slugificar(empleado.apellido)}.pdf`;
 
   if (liquidacion.pdf_url && fs.existsSync(rutaArchivo(liquidacion))) {
-    return { ruta: rutaArchivo(liquidacion), nombre: nombreArchivo(liquidacion) };
+    return { ruta: rutaArchivo(liquidacion), nombre: nombreDescarga };
   }
 
-  const empleado = await empleadoModel.findById(liquidacion.empleado_id);
   const contratos = await contratoModel.findAll({ empleadoId: liquidacion.empleado_id });
   const ruta = await generarPdfLiquidacion(liquidacion, empleado, contratos[0] || null);
   const pdfUrl = `/uploads/liquidaciones/${nombreArchivo(liquidacion)}`;
   await liquidacionModel.actualizarPdfUrl(id, pdfUrl);
 
-  return { ruta, nombre: nombreArchivo(liquidacion) };
+  return { ruta, nombre: nombreDescarga };
 }
 
 /**
