@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { useAuth } from '../context/useAuth';
 import UsuarioForm from '../components/UsuarioForm';
 import { IconEdit, IconKey, IconPower } from '../components/icons';
 import {
@@ -11,6 +12,7 @@ import {
 } from '../services/usuarios.service';
 
 function Usuarios() {
+  const { usuario: usuarioActual } = useAuth();
   const [usuarios, setUsuarios] = useState([]);
   const [error, setError] = useState(null);
   const [mostrarInactivos, setMostrarInactivos] = useState(false);
@@ -159,14 +161,16 @@ function Usuarios() {
                   <button type="button" className="btn-icon" onClick={() => handleEditar(u)} title="Editar">
                     <IconEdit />
                   </button>
-                  <button
-                    type="button"
-                    className="btn-icon"
-                    onClick={() => handleAbrirCambioPassword(u.id)}
-                    title="Cambiar contraseña"
-                  >
-                    <IconKey />
-                  </button>
+                  {u.id !== usuarioActual?.id && (
+                    <button
+                      type="button"
+                      className="btn-icon"
+                      onClick={() => handleAbrirCambioPassword(u.id)}
+                      title="Restablecer contraseña"
+                    >
+                      <IconKey />
+                    </button>
+                  )}
                   {u.activo ? (
                     <button
                       type="button"
