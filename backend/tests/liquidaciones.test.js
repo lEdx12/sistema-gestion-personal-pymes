@@ -32,7 +32,15 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  fs.rmSync(path.join(__dirname, '..', 'uploads', 'liquidaciones'), { recursive: true, force: true });
+  // Borrar solo los PDF que generó este archivo (por nombre exacto), nunca la carpeta
+  // entera: ahí también caen los PDF reales que descargan usuarios de verdad.
+  const { rows: generados } = await pool.query(
+    'SELECT pdf_url FROM liquidaciones WHERE empleado_id = $1 AND pdf_url IS NOT NULL',
+    [empleadoId],
+  );
+  for (const { pdf_url: pdfUrl } of generados) {
+    fs.rmSync(path.join(__dirname, '..', 'uploads', 'liquidaciones', path.basename(pdfUrl)), { force: true });
+  }
   await pool.query('DELETE FROM liquidaciones WHERE empleado_id = $1', [empleadoId]);
   await pool.query('DELETE FROM asistencia WHERE empleado_id = $1', [empleadoId]);
   await pool.query('DELETE FROM contratos WHERE empleado_id = $1', [empleadoId]);
