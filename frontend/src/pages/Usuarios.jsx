@@ -11,14 +11,24 @@ import {
   reactivarUsuario,
 } from '../services/usuarios.service';
 
+// Evita caracteres que se confunden al leerlos/tipearlos (0/O, 1/l/I).
+const ALFABETO_PASSWORD_TEMPORAL = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789';
+
+function generarPasswordTemporal() {
+  let resultado = '';
+  for (let i = 0; i < 10; i++) {
+    resultado += ALFABETO_PASSWORD_TEMPORAL[Math.floor(Math.random() * ALFABETO_PASSWORD_TEMPORAL.length)];
+  }
+  return resultado;
+}
+
 function Usuarios() {
   const { usuario: usuarioActual } = useAuth();
   const [usuarios, setUsuarios] = useState([]);
   const [error, setError] = useState(null);
   const [mostrarInactivos, setMostrarInactivos] = useState(false);
   const [usuarioEditando, setUsuarioEditando] = useState(null);
-  const [cambiandoPasswordId, setCambiandoPasswordId] = useState(null);
-  const [nuevaPassword, setNuevaPassword] = useState('');
+  const [passwordGenerada, setPasswordGenerada] = useState(null); // { id, password }
   const [errorPassword, setErrorPassword] = useState(null);
 
   const cargar = useCallback(async () => {
@@ -70,21 +80,28 @@ function Usuarios() {
     await cargar();
   }
 
-  function handleAbrirCambioPassword(id) {
+  async function handleRestablecerPassword(usuario) {
+    const confirmado = window.confirm(
+      `¿Restablecer la contraseña de ${usuario.nombre}? Se generará una contraseña temporal y deberá cambiarla en su próximo inicio de sesión.`,
+    );
+    if (!confirmado) return;
+
     setErrorPassword(null);
-    setNuevaPassword('');
-    setCambiandoPasswordId(id);
+    const temporal = generarPasswordTemporal();
+    try {
+      await cambiarPasswordUsuario(usuario.id, temporal);
+      setPasswordGenerada({ id: usuario.id, password: temporal });
+      await cargar();
+    } catch (err) {
+      setErrorPassword(err.response?.data?.error || 'Error al restablecer la contraseña');
+    }
   }
 
-  async function handleGuardarPassword(e) {
-    e.preventDefault();
-    setErrorPassword(null);
+  async function handleCopiarPassword(password) {
     try {
-      await cambiarPasswordUsuario(cambiandoPasswordId, nuevaPassword);
-      setCambiandoPasswordId(null);
-      setNuevaPassword('');
-    } catch (err) {
-      setErrorPassword(err.response?.data?.error || 'Error al cambiar la contraseña');
+      await navigator.clipboard.writeText(password);
+    } catch {
+      // Si el portapapeles no está disponible, la contraseña igual queda visible para copiarla a mano.
     }
   }
 
@@ -106,6 +123,8 @@ function Usuarios() {
           onCancelar={handleCancelarEdicion}
         />
       </div>
+
+      {errorPassword && <p className="field-error">{errorPassword}</p>}
 
       <div className="table-wrap">
         <div className="table-toolbar">
@@ -165,7 +184,7 @@ function Usuarios() {
                     <button
                       type="button"
                       className="btn-icon"
-                      onClick={() => handleAbrirCambioPassword(u.id)}
+                      onClick={() => handleRestablecerPassword(u)}
                       title="Restablecer contraseña"
                     >
                       <IconKey />
@@ -191,26 +210,31 @@ function Usuarios() {
                     </button>
                   )}
                 </div>
-                {cambiandoPasswordId === u.id && (
-                  <form
-                    onSubmit={handleGuardarPassword}
-                    style={{ display: 'flex', gap: '0.4rem', marginTop: '0.4rem', alignItems: 'center' }}
+                {passwordGenerada?.id === u.id && (
+                  <div
+                    className="card"
+                    style={{
+                      display: 'flex',
+                      gap: '0.6rem',
+                      alignItems: 'center',
+                      marginTop: '0.5rem',
+                      padding: '0.5rem 0.75rem',
+                    }}
                   >
-                    <input
-                      type="password"
-                      placeholder="Nueva contraseña"
-                      value={nuevaPassword}
-                      onChange={(e) => setNuevaPassword(e.target.value)}
-                      minLength={8}
-                      required
-                      style={{ maxWidth: 160 }}
-                    />
-                    <button type="submit">Guardar</button>
-                    <button type="button" className="btn-ghost" onClick={() => setCambiandoPasswordId(null)}>
-                      Cancelar
+                    <div style={{ fontSize: '0.85em' }}>
+                      Contraseña temporal: <strong>{passwordGenerada.password}</strong>
+                      <br />
+                      <span className="page-subtitle" style={{ margin: 0 }}>
+                        Compártela con {u.nombre}; no se volverá a mostrar.
+                      </span>
+                    </div>
+                    <button type="button" onClick={() => handleCopiarPassword(passwordGenerada.password)}>
+                      Copiar
                     </button>
-                    {errorPassword && <span className="field-error" style={{ fontSize: '0.85em' }}>{errorPassword}</span>}
-                  </form>
+                    <button type="button" className="btn-ghost" onClick={() => setPasswordGenerada(null)}>
+                      Cerrar
+                    </button>
+                  </div>
                 )}
               </td>
             </tr>
