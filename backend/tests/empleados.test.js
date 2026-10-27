@@ -74,6 +74,15 @@ describe('GET /api/empleados', () => {
   });
 });
 
+describe('GET /api/empleados/selector', () => {
+  it('lista id/rut/nombre/apellido sin datos sensibles (sueldo, dirección, etc.)', async () => {
+    const res = await request(app).get('/api/empleados/selector').set('Authorization', authHeader);
+    expect(res.status).toBe(200);
+    const fila = res.body.find((e) => e.rut === RUT_PRUEBA_NORMALIZADO);
+    expect(fila).toEqual({ id: expect.any(Number), rut: RUT_PRUEBA_NORMALIZADO, nombre: 'Juana', apellido: 'Pérez' });
+  });
+});
+
 describe('PUT /api/empleados/:id/desactivar', () => {
   it('desactiva un empleado existente', async () => {
     const creado = await request(app)

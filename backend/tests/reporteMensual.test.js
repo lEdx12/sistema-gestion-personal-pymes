@@ -98,3 +98,38 @@ describe('GET /api/asistencia/reporte-mensual (consolidado)', () => {
     expect(fila.totalHoras).toBe(36);
   });
 });
+
+describe('GET /api/asistencia/reporte-mensual/pdf', () => {
+  it('descarga el PDF del reporte individual', async () => {
+    const res = await request(app)
+      .get('/api/asistencia/reporte-mensual/pdf')
+      .set('Authorization', authHeader)
+      .query({ empleado_id: empleadoId, periodo: '2026-05' });
+
+    expect(res.status).toBe(200);
+    expect(res.headers['content-type']).toBe('application/pdf');
+    expect(res.headers['content-disposition']).toContain('attachment');
+    expect(res.headers['content-disposition']).toContain(RUT_EMPLEADO);
+    expect(res.body.slice(0, 4).toString()).toBe('%PDF');
+  });
+
+  it('descarga el PDF del reporte consolidado', async () => {
+    const res = await request(app)
+      .get('/api/asistencia/reporte-mensual/pdf')
+      .set('Authorization', authHeader)
+      .query({ periodo: '2026-05' });
+
+    expect(res.status).toBe(200);
+    expect(res.headers['content-type']).toBe('application/pdf');
+    expect(res.headers['content-disposition']).toContain('consolidado');
+    expect(res.body.slice(0, 4).toString()).toBe('%PDF');
+  });
+
+  it('rechaza si el empleado no existe', async () => {
+    const res = await request(app)
+      .get('/api/asistencia/reporte-mensual/pdf')
+      .set('Authorization', authHeader)
+      .query({ empleado_id: 999999, periodo: '2026-05' });
+    expect(res.status).toBe(404);
+  });
+});

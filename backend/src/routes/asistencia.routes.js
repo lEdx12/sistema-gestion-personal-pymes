@@ -9,6 +9,7 @@ const router = express.Router();
 router.get('/', permitirRoles('administrador'), controller.listar);
 router.get('/resumen-semanal', permitirRoles('administrador'), controller.resumenSemanal);
 router.get('/reporte-mensual', permitirRoles('administrador', 'gerente'), controller.reporteMensual);
+router.get('/reporte-mensual/pdf', permitirRoles('administrador', 'gerente'), controller.reporteMensualPdf);
 router.get('/:id', permitirRoles('administrador'), controller.obtener);
 router.post('/entrada', permitirRoles('administrador'), controller.entrada);
 router.post('/ausencia', permitirRoles('administrador'), controller.ausencia);

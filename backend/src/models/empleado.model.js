@@ -13,6 +13,19 @@ async function findAll({ incluirInactivos = false } = {}) {
   return rows;
 }
 
+/**
+ * Versión acotada de `findAll`, solo con lo necesario para elegir un empleado en un
+ * selector (ej. el reporte de asistencia) — sin sueldo, dirección ni otros datos
+ * personales. Es lo único de `empleados` que puede ver el Gerente (RF-02): no gestiona
+ * la ficha, pero sí necesita saber a quién corresponde cada reporte.
+ */
+async function findAllResumen() {
+  const { rows } = await pool.query(
+    'SELECT id, rut, nombre, apellido FROM empleados WHERE activo = TRUE ORDER BY apellido, nombre',
+  );
+  return rows;
+}
+
 async function findById(id) {
   const { rows } = await pool.query(`SELECT ${COLUMNAS} FROM empleados WHERE id = $1`, [id]);
   return rows[0] || null;
@@ -109,4 +122,4 @@ async function reactivar(id) {
   return rows[0] || null;
 }
 
-module.exports = { findAll, findById, findByRut, create, update, desactivar, reactivar };
+module.exports = { findAll, findAllResumen, findById, findByRut, create, update, desactivar, reactivar };

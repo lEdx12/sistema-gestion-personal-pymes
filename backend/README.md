@@ -207,6 +207,8 @@ resumen agregado sobre la tabla. Pruebas en `tests/historialRemuneraciones.test.
 | Método | Ruta | Query | Respuesta |
 |--------|------|-------|-----------|
 | GET | `/api/asistencia/reporte-mensual` | `periodo` (obligatorio, `YYYY-MM`) + `empleado_id` opcional | `200` reporte individual (con `empleado_id`) o consolidado (sin él) / `400` / `404` |
+| GET | `/api/asistencia/reporte-mensual/pdf` | mismos parámetros | `200` descarga el PDF del mismo reporte (`Content-Type: application/pdf`) / `400` / `404` |
+| GET | `/api/empleados/selector` | — | `200` lista acotada `[{ id, rut, nombre, apellido }]` de empleados activos, sin sueldo ni otros datos sensibles |
 
 RF-12 (reporte de asistencia mensual): un mismo endpoint cubre los dos casos del RF.
 Con `empleado_id` devuelve `{ periodo, empleado, diasTrabajados, diasAusentes,
@@ -217,9 +219,21 @@ mismo resumen. `src/utils/periodo.js` (nuevo, compartido con RF-09) centraliza
 `obtenerBloquesSemanalesDelPeriodo` vivía duplicada en `liquidacionCalculo.service.js`;
 se refactorizó a este módulo al necesitarla de nuevo aquí. La sobrejornada se calcula
 igual que en RF-09 (por bloques semanales de 7 días, no sobre el mes completo).
+
+`GET /api/asistencia/reporte-mensual/pdf` (`src/services/reporteAsistenciaPdf.service.js`)
+arma el mismo reporte en PDF con `pdfkit`. A diferencia de la liquidación (RF-10), el
+reporte no es un documento inmutable — se recalcula de la asistencia vigente cada vez —
+así que no se guarda en disco ni se cachea: se arma al vuelo y se transmite directo a la
+respuesta HTTP (`doc.pipe(res)`).
+
+`GET /api/empleados/selector` existe porque el Gerente no puede listar `/api/empleados`
+(RF-02) pero sí necesita elegir a quién verle el reporte individual: devuelve solo
+`id/rut/nombre/apellido` de los empleados activos, sin sueldo, dirección ni otros datos
+que están fuera de su alcance de "solo lectura de reportes".
+
 Frontend: página `/reportes/asistencia`, con selector de empleado ("Todos" = vista
-consolidada) y período; accesible desde la barra de navegación y desde la página de
-asistencia de cada empleado. Pruebas en `tests/periodo.test.js` y
+consolidada), período y botón "Descargar PDF"; accesible desde la barra de navegación y
+desde la página de asistencia de cada empleado. Pruebas en `tests/periodo.test.js` y
 `tests/reporteMensual.test.js`.
 
 RF-02 (gestión de roles — **Sprint 3**): `permitirRoles(...roles)`
@@ -230,9 +244,11 @@ reportes, liquidaciones e historial de remuneraciones, es decir:
 
 | Módulo | Administrador | Gerente |
 |--------|----------------|---------|
-| `/api/empleados`, `/api/contratos` | CRUD completo | sin acceso (`403`) |
+| `/api/empleados` (ficha completa) | CRUD completo | sin acceso (`403`) |
+| `GET /api/empleados/selector` (solo id/rut/nombre) | sí | sí (solo lectura) |
+| `/api/contratos` | CRUD completo | sin acceso (`403`) |
 | `/api/asistencia` (marcaje, edición, resumen semanal) | CRUD completo | sin acceso (`403`) |
-| `GET /api/asistencia/reporte-mensual` | sí | sí (solo lectura) |
+| `GET /api/asistencia/reporte-mensual` y `/pdf` | sí | sí (solo lectura) |
 | `GET /api/liquidaciones`, `/historial`, `/:id`, `/:id/pdf` | sí | sí (solo lectura) |
 | `POST /api/liquidaciones` (generar) | sí | sin acceso (`403`) |
 | `/api/usuarios` (RF-14) | CRUD completo | sin acceso (`403`) |

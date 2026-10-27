@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { listarEmpleados } from '../services/empleados.service';
-import { obtenerReporteMensual } from '../services/reportes.service';
+import { listarEmpleadosSelector } from '../services/empleados.service';
+import { obtenerReporteMensual, descargarReporteMensualPdf } from '../services/reportes.service';
 
 function ReporteAsistencia() {
   const [searchParams] = useSearchParams();
@@ -10,11 +10,12 @@ function ReporteAsistencia() {
   const [periodo, setPeriodo] = useState('');
   const [reporte, setReporte] = useState(null);
   const [error, setError] = useState(null);
+  const [descargando, setDescargando] = useState(false);
 
   useEffect(() => {
-    // Un Gerente no puede listar empleados (RF-02): el selector queda solo con la
-    // opción "Todos (consolidado)", que sigue estando disponible para su rol.
-    listarEmpleados()
+    // Selector acotado (id/rut/nombre): a diferencia de /api/empleados, también lo
+    // puede usar el Gerente, para elegir a quién ver el reporte individual (RF-02).
+    listarEmpleadosSelector()
       .then(setEmpleados)
       .catch(() => setEmpleados([]));
   }, []);
@@ -28,6 +29,18 @@ function ReporteAsistencia() {
       setReporte(data);
     } catch (err) {
       setError(err.response?.data?.error || 'Error al generar el reporte');
+    }
+  }
+
+  async function handleDescargarPdf() {
+    setError(null);
+    setDescargando(true);
+    try {
+      await descargarReporteMensualPdf({ empleadoId: empleadoId || undefined, periodo });
+    } catch (err) {
+      setError(err.response?.data?.error || 'Error al descargar el PDF');
+    } finally {
+      setDescargando(false);
     }
   }
 
@@ -57,7 +70,12 @@ function ReporteAsistencia() {
           <input type="month" value={periodo} onChange={(e) => setPeriodo(e.target.value)} required />
         </label>
         {error && <p className="field-error">{error}</p>}
-        <button type="submit">Generar reporte</button>
+        <div className="form-actions">
+          <button type="submit">Generar reporte</button>
+          <button type="button" className="btn-ghost" onClick={handleDescargarPdf} disabled={!periodo || descargando}>
+            {descargando ? 'Descargando...' : 'Descargar PDF'}
+          </button>
+        </div>
       </form>
 
       {reporte && reporte.empleado && (

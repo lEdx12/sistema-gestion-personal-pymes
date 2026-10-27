@@ -18,6 +18,15 @@ async function listar(req, res) {
   }
 }
 
+async function selector(req, res) {
+  try {
+    const empleados = await empleadosService.listarResumenEmpleados();
+    res.json(empleados);
+  } catch (err) {
+    manejarError(res, err);
+  }
+}
+
 async function obtener(req, res) {
   try {
     const empleado = await empleadosService.obtenerEmpleado(req.params.id);
@@ -63,4 +72,4 @@ async function reactivar(req, res) {
   }
 }
 
-module.exports = { listar, obtener, crear, actualizar, desactivar, reactivar };
+module.exports = { listar, selector, obtener, crear, actualizar, desactivar, reactivar };

@@ -31,6 +31,10 @@ async function listarEmpleados(opciones) {
   return empleadoModel.findAll(opciones);
 }
 
+async function listarResumenEmpleados() {
+  return empleadoModel.findAllResumen();
+}
+
 async function obtenerEmpleado(id) {
   const empleado = await empleadoModel.findById(id);
   if (!empleado) throw new ServiceError(404, 'Empleado no encontrado');
@@ -80,6 +84,7 @@ async function reactivarEmpleado(id) {
 module.exports = {
   ServiceError,
   listarEmpleados,
+  listarResumenEmpleados,
   obtenerEmpleado,
   crearEmpleado,
   actualizarEmpleado,

@@ -1,4 +1,5 @@
 const asistenciaService = require('../services/asistencia.service');
+const { generarPdfReporteMensual } = require('../services/reporteAsistenciaPdf.service');
 
 function manejarError(res, err) {
   if (err.status) {
@@ -90,6 +91,22 @@ async function reporteMensual(req, res) {
   }
 }
 
+async function reporteMensualPdf(req, res) {
+  try {
+    const { empleado_id, periodo } = req.query;
+    const reporte = await asistenciaService.obtenerReporteMensual({ empleadoId: empleado_id, periodo });
+    const identificador = reporte.empleado ? reporte.empleado.rut : 'consolidado';
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader(
+      'Content-Disposition',
+      `attachment; filename="reporte-asistencia-${reporte.periodo}-${identificador}.pdf"`,
+    );
+    generarPdfReporteMensual(reporte).pipe(res);
+  } catch (err) {
+    manejarError(res, err);
+  }
+}
+
 module.exports = {
   listar,
   obtener,
@@ -99,4 +116,5 @@ module.exports = {
   actualizar,
   resumenSemanal,
   reporteMensual,
+  reporteMensualPdf,
 };

@@ -37,6 +37,19 @@ describe('RF-02: el Gerente solo puede leer reportes, liquidaciones e historial'
     expect(res.status).not.toBe(403);
   });
 
+  it('permite al Gerente descargar el PDF del reporte mensual', async () => {
+    const res = await request(app)
+      .get('/api/asistencia/reporte-mensual/pdf')
+      .set('Authorization', authGerente)
+      .query({ periodo: '2026-01' });
+    expect(res.status).not.toBe(403);
+  });
+
+  it('permite al Gerente usar el selector de empleados (para elegir a quién verle el reporte)', async () => {
+    const res = await request(app).get('/api/empleados/selector').set('Authorization', authGerente);
+    expect(res.status).not.toBe(403);
+  });
+
   it('rechaza al Gerente generar una liquidación', async () => {
     const res = await request(app)
       .post('/api/liquidaciones')
