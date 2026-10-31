@@ -198,6 +198,25 @@ button[type='submit']:hover,
   color: var(--text-muted);
 }
 
+/* .btn-ghost en un <a>/<Link> (ej. "Detalle" en Liquidaciones): la regla `button {}` de
+   arriba no alcanza a los enlaces, así que necesita su propia forma de botón. */
+a.btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  font: inherit;
+  font-weight: 500;
+  font-size: 0.87rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid transparent;
+  padding: 0.5rem 0.9rem;
+  line-height: 1.2;
+  text-decoration: none;
+}
+
+a.btn-ghost:hover {
+  text-decoration: none;
+}
+
 .btn-ghost:hover {
   background: var(--surface-2);
   color: var(--text);

@@ -153,7 +153,7 @@ function Liquidaciones() {
                     <strong>${formatearMonto(l.liquido_pagar)}</strong>
                   </td>
                   <td>
-                    <div className="row-actions">
+                    <div className="row-actions" style={{ gap: '0.5rem', justifyContent: 'flex-start' }}>
                       <button type="button" onClick={() => handleDescargarPdf(l)}>
                         Descargar PDF
                       </button>
