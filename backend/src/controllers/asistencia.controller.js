@@ -12,9 +12,16 @@ function manejarError(res, err) {
 
 async function listar(req, res) {
   try {
-    const { empleado_id, desde, hasta } = req.query;
-    const registros = await asistenciaService.listarAsistencia({ empleadoId: empleado_id, desde, hasta });
-    res.json(registros);
+    const { empleado_id, desde, hasta, ausente, pagina, por_pagina: porPagina } = req.query;
+    const resultado = await asistenciaService.listarAsistencia({
+      empleadoId: empleado_id,
+      desde,
+      hasta,
+      ausente: ausente === undefined ? undefined : ausente === 'true',
+      pagina,
+      porPagina,
+    });
+    res.json(resultado);
   } catch (err) {
     manejarError(res, err);
   }

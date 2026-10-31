@@ -107,6 +107,18 @@ describe('GET /api/liquidaciones/historial', () => {
     expect(res.status).toBe(404);
   });
 
+  it('pagina las liquidaciones sin alterar los agregados (cantidad, totalLiquido)', async () => {
+    const res = await request(app)
+      .get('/api/liquidaciones/historial')
+      .set('Authorization', authHeader)
+      .query({ empleado_id: empleadoId, pagina: 1, por_pagina: 2 });
+
+    expect(res.status).toBe(200);
+    expect(res.body.liquidaciones).toHaveLength(2);
+    expect(res.body.cantidad).toBe(4);
+    expect(res.body.totalPaginas).toBe(2);
+  });
+
   it('devuelve un historial vacío si no hay liquidaciones en el rango', async () => {
     const res = await request(app)
       .get('/api/liquidaciones/historial')

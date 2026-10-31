@@ -1,7 +1,9 @@
 import api from './api';
 
-export async function listarUsuarios(incluirInactivos = false) {
-  const { data } = await api.get('/usuarios', { params: { incluirInactivos } });
+export async function listarUsuarios({ incluirInactivos = false, texto, rol, pagina, porPagina } = {}) {
+  const { data } = await api.get('/usuarios', {
+    params: { incluirInactivos, texto: texto || undefined, rol: rol || undefined, pagina, por_pagina: porPagina },
+  });
   return data;
 }
 

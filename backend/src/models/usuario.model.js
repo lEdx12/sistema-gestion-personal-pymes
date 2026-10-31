@@ -2,10 +2,26 @@ const pool = require('../config/db');
 
 const COLUMNAS_PUBLICAS = 'id, nombre, email, rol, activo, debe_cambiar_password, created_at';
 
-async function findAll({ incluirInactivos = false } = {}) {
-  const where = incluirInactivos ? '' : 'WHERE activo = TRUE';
+async function findAll({ incluirInactivos = false, texto, rol } = {}) {
+  const condiciones = [];
+  const valores = [];
+
+  if (!incluirInactivos) {
+    condiciones.push('activo = TRUE');
+  }
+  if (texto) {
+    valores.push(`%${texto}%`);
+    condiciones.push(`(nombre ILIKE $${valores.length} OR email ILIKE $${valores.length})`);
+  }
+  if (rol) {
+    valores.push(rol);
+    condiciones.push(`rol = $${valores.length}`);
+  }
+
+  const where = condiciones.length ? `WHERE ${condiciones.join(' AND ')}` : '';
   const { rows } = await pool.query(
     `SELECT ${COLUMNAS_PUBLICAS} FROM usuarios ${where} ORDER BY nombre`,
+    valores,
   );
   return rows;
 }

@@ -81,9 +81,37 @@ describe('POST /api/usuarios', () => {
 
 describe('GET /api/usuarios', () => {
   it('lista solo usuarios activos por defecto', async () => {
-    const res = await request(app).get('/api/usuarios').set('Authorization', authHeader);
+    const res = await request(app)
+      .get('/api/usuarios')
+      .set('Authorization', authHeader)
+      .query({ texto: EMAIL_PRUEBA });
     expect(res.status).toBe(200);
-    expect(res.body.find((u) => u.id === usuarioId)).toBeTruthy();
+    expect(res.body.datos.find((u) => u.id === usuarioId)).toBeTruthy();
+  });
+});
+
+describe('GET /api/usuarios — filtros y paginación', () => {
+  it('filtra por rol', async () => {
+    const res = await request(app)
+      .get('/api/usuarios')
+      .set('Authorization', authHeader)
+      .query({ texto: EMAIL_PRUEBA, rol: 'gerente' });
+    expect(res.status).toBe(200);
+    expect(res.body.datos.find((u) => u.id === usuarioId)).toBeTruthy();
+
+    const sinCoincidencia = await request(app)
+      .get('/api/usuarios')
+      .set('Authorization', authHeader)
+      .query({ texto: EMAIL_PRUEBA, rol: 'administrador' });
+    expect(sinCoincidencia.body.datos.find((u) => u.id === usuarioId)).toBeUndefined();
+  });
+
+  it('devuelve metadatos de paginación', async () => {
+    const res = await request(app)
+      .get('/api/usuarios')
+      .set('Authorization', authHeader)
+      .query({ texto: EMAIL_PRUEBA, pagina: 1, por_pagina: 1 });
+    expect(res.body).toMatchObject({ total: 1, pagina: 1, porPagina: 1, totalPaginas: 1 });
   });
 });
 

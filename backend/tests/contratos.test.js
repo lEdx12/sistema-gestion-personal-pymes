@@ -98,7 +98,7 @@ describe('PUT /api/contratos/:id/renovar', () => {
     const listado = await request(app)
       .get(`/api/contratos?empleado_id=${empleadoId}`)
       .set('Authorization', authHeader);
-    const contratoActivo = listado.body.find((c) => c.activo);
+    const contratoActivo = listado.body.datos.find((c) => c.activo);
 
     const res = await request(app)
       .put(`/api/contratos/${contratoActivo.id}/renovar`)
@@ -123,8 +123,16 @@ describe('GET /api/contratos', () => {
       .get(`/api/contratos?empleado_id=${empleadoId}`)
       .set('Authorization', authHeader);
     expect(res.status).toBe(200);
-    expect(res.body.length).toBeGreaterThanOrEqual(2);
-    expect(res.body.every((c) => c.empleado_id === empleadoId)).toBe(true);
+    expect(res.body.datos.length).toBeGreaterThanOrEqual(2);
+    expect(res.body.datos.every((c) => c.empleado_id === empleadoId)).toBe(true);
+  });
+
+  it('pagina los resultados', async () => {
+    const res = await request(app)
+      .get(`/api/contratos?empleado_id=${empleadoId}&pagina=1&por_pagina=1`)
+      .set('Authorization', authHeader);
+    expect(res.body.datos).toHaveLength(1);
+    expect(res.body.totalPaginas).toBeGreaterThanOrEqual(2);
   });
 });
 
@@ -133,7 +141,7 @@ describe('POST /api/contratos/:id/documento', () => {
     const listado = await request(app)
       .get(`/api/contratos?empleado_id=${empleadoId}`)
       .set('Authorization', authHeader);
-    const contrato = listado.body[0];
+    const contrato = listado.body.datos[0];
 
     const res = await request(app)
       .post(`/api/contratos/${contrato.id}/documento`)
@@ -152,7 +160,7 @@ describe('POST /api/contratos/:id/documento', () => {
     const listado = await request(app)
       .get(`/api/contratos?empleado_id=${empleadoId}`)
       .set('Authorization', authHeader);
-    const contrato = listado.body[0];
+    const contrato = listado.body.datos[0];
 
     const res = await request(app)
       .post(`/api/contratos/${contrato.id}/documento`)
@@ -169,7 +177,7 @@ describe('POST /api/contratos/:id/documento', () => {
     const listado = await request(app)
       .get(`/api/contratos?empleado_id=${empleadoId}`)
       .set('Authorization', authHeader);
-    const contrato = listado.body[0];
+    const contrato = listado.body.datos[0];
 
     const res = await request(app)
       .post(`/api/contratos/${contrato.id}/documento`)

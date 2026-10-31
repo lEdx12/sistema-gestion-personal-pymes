@@ -55,8 +55,8 @@ function EmpleadoForm({ onSubmit, error, empleado, onCancelar }) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="form-grid" style={{ maxWidth: 420 }}>
-      <div className="form-grid" style={{ gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+    <form onSubmit={handleSubmit} className="form-grid">
+      <div className="form-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))' }}>
         <label className="field">
           RUT
           <input

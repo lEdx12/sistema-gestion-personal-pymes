@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { listarAlertas, marcarAlertaLeida, generarAlertas } from '../services/alertas.service';
 import { IconCheck } from '../components/icons';
+import Paginacion from '../components/Paginacion';
 
 function formatearFecha(fecha) {
   return fecha?.slice(0, 10);
@@ -8,18 +9,25 @@ function formatearFecha(fecha) {
 
 function Alertas() {
   const [alertas, setAlertas] = useState([]);
+  const [paginacion, setPaginacion] = useState({ pagina: 1, totalPaginas: 1, total: 0 });
   const [soloNoLeidas, setSoloNoLeidas] = useState(true);
+  const [pagina, setPagina] = useState(1);
   const [error, setError] = useState(null);
   const [generando, setGenerando] = useState(false);
 
   const cargar = useCallback(async () => {
-    const data = await listarAlertas(soloNoLeidas);
-    setAlertas(data);
-  }, [soloNoLeidas]);
+    const data = await listarAlertas({ soloNoLeidas, pagina });
+    setAlertas(data.datos);
+    setPaginacion({ pagina: data.pagina, totalPaginas: data.totalPaginas, total: data.total });
+  }, [soloNoLeidas, pagina]);
 
   useEffect(() => {
     cargar();
   }, [cargar]);
+
+  useEffect(() => {
+    setPagina(1);
+  }, [soloNoLeidas]);
 
   async function handleMarcarLeida(id) {
     await marcarAlertaLeida(id);
@@ -55,7 +63,7 @@ function Alertas() {
 
       <div className="table-wrap">
         <div className="table-toolbar">
-          <h2 style={{ margin: 0 }}>{alertas.length} alerta(s)</h2>
+          <h2 style={{ margin: 0 }}>{paginacion.total} alerta(s)</h2>
           <label className="checkbox-label">
             <input
               type="checkbox"
@@ -109,6 +117,12 @@ function Alertas() {
             </tbody>
           </table>
         )}
+        <Paginacion
+          pagina={paginacion.pagina}
+          totalPaginas={paginacion.totalPaginas}
+          total={paginacion.total}
+          onCambiarPagina={setPagina}
+        />
       </div>
     </div>
   );

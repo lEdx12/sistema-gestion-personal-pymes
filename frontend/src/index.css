@@ -600,6 +600,37 @@ tbody tr:hover {
   color: var(--text);
 }
 
+/* ---------- Filtros y paginación ---------- */
+.filtros-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.filtros-bar input[type='text'],
+.filtros-bar input[type='search'],
+.filtros-bar select {
+  min-width: 170px;
+}
+
+.paginacion {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  padding: 0.75rem 1rem;
+  border-top: 1px solid var(--border);
+  font-size: 0.82rem;
+  color: var(--text-muted);
+}
+
+.paginacion-botones {
+  display: flex;
+  gap: 0.5rem;
+}
+
 /* ---------- Formularios ---------- */
 .form-grid {
   display: grid;

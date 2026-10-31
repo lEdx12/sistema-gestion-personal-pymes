@@ -11,9 +11,15 @@ export async function generarLiquidacion(empleadoId, periodo) {
   return data;
 }
 
-export async function obtenerHistorialRemuneraciones(empleadoId, desde, hasta) {
+export async function obtenerHistorialRemuneraciones(empleadoId, desde, hasta, pagina, porPagina) {
   const { data } = await api.get('/liquidaciones/historial', {
-    params: { empleado_id: empleadoId, desde: desde || undefined, hasta: hasta || undefined },
+    params: {
+      empleado_id: empleadoId,
+      desde: desde || undefined,
+      hasta: hasta || undefined,
+      pagina,
+      por_pagina: porPagina,
+    },
   });
   return data;
 }

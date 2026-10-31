@@ -53,11 +53,13 @@ async function descargarPdf(req, res) {
 
 async function historial(req, res) {
   try {
-    const { empleado_id, desde, hasta } = req.query;
+    const { empleado_id, desde, hasta, pagina, por_pagina: porPagina } = req.query;
     const resultado = await liquidacionesService.obtenerHistorialRemuneraciones({
       empleadoId: empleado_id,
       desde,
       hasta,
+      pagina,
+      porPagina,
     });
     res.json(resultado);
   } catch (err) {

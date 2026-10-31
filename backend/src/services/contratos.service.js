@@ -1,6 +1,7 @@
 const pool = require('../config/db');
 const contratoModel = require('../models/contrato.model');
 const empleadoModel = require('../models/empleado.model');
+const { paginar } = require('../utils/paginacion');
 
 class ServiceError extends Error {
   constructor(status, message) {
@@ -35,8 +36,9 @@ async function asegurarEmpleadoExiste(empleadoId) {
   return empleado;
 }
 
-async function listarContratos(opciones) {
-  return contratoModel.findAll(opciones);
+async function listarContratos({ empleadoId, pagina, porPagina } = {}) {
+  const contratos = await contratoModel.findAll({ empleadoId });
+  return paginar(contratos, { pagina, porPagina });
 }
 
 async function obtenerContrato(id) {

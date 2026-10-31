@@ -1,7 +1,9 @@
 import api from './api';
 
-export async function listarEmpleados(incluirInactivos = false) {
-  const { data } = await api.get('/empleados', { params: { incluirInactivos } });
+export async function listarEmpleados({ incluirInactivos = false, texto, pagina, porPagina } = {}) {
+  const { data } = await api.get('/empleados', {
+    params: { incluirInactivos, texto: texto || undefined, pagina, por_pagina: porPagina },
+  });
   return data;
 }
 

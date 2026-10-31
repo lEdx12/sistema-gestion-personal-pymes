@@ -2,10 +2,18 @@ const pool = require('../config/db');
 
 const COLUMNAS = 'id, empleado_id, nombre, tipo, url, created_at';
 
-async function findAllByEmpleado(empleadoId) {
+async function findAllByEmpleado(empleadoId, { tipo } = {}) {
+  const condiciones = ['empleado_id = $1'];
+  const valores = [empleadoId];
+
+  if (tipo) {
+    valores.push(`%${tipo}%`);
+    condiciones.push(`tipo ILIKE $${valores.length}`);
+  }
+
   const { rows } = await pool.query(
-    `SELECT ${COLUMNAS} FROM documentos WHERE empleado_id = $1 ORDER BY created_at DESC`,
-    [empleadoId],
+    `SELECT ${COLUMNAS} FROM documentos WHERE ${condiciones.join(' AND ')} ORDER BY created_at DESC`,
+    valores,
   );
   return rows;
 }

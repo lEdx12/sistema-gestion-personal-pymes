@@ -1,5 +1,6 @@
 const empleadoModel = require('../models/empleado.model');
 const { validarRut, normalizarRut } = require('../utils/rut');
+const { paginar } = require('../utils/paginacion');
 
 class ServiceError extends Error {
   constructor(status, message) {
@@ -27,8 +28,9 @@ function validarDatosEmpleado(datos) {
   }
 }
 
-async function listarEmpleados(opciones) {
-  return empleadoModel.findAll(opciones);
+async function listarEmpleados({ incluirInactivos, texto, pagina, porPagina } = {}) {
+  const empleados = await empleadoModel.findAll({ incluirInactivos, texto });
+  return paginar(empleados, { pagina, porPagina });
 }
 
 async function listarResumenEmpleados() {

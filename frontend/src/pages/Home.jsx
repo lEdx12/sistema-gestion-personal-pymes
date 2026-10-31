@@ -12,9 +12,17 @@ function DashboardAdministrador() {
   const [totalUsuarios, setTotalUsuarios] = useState(null);
 
   useEffect(() => {
-    listarEmpleados(true).then(setEmpleados).catch(() => setEmpleados([]));
-    listarAlertas(true).then(setAlertas).catch(() => setAlertas([]));
-    listarUsuarios(false).then((data) => setTotalUsuarios(data.length)).catch(() => setTotalUsuarios(null));
+    // porPagina en el máximo permitido (100): el dashboard necesita el total real para
+    // las tarjetas de resumen, no solo una página — de sobra para una PyME.
+    listarEmpleados({ incluirInactivos: true, porPagina: 100 })
+      .then((data) => setEmpleados(data.datos))
+      .catch(() => setEmpleados([]));
+    listarAlertas({ soloNoLeidas: true, porPagina: 100 })
+      .then((data) => setAlertas(data.datos))
+      .catch(() => setAlertas([]));
+    listarUsuarios({ incluirInactivos: false })
+      .then((data) => setTotalUsuarios(data.total))
+      .catch(() => setTotalUsuarios(null));
   }, []);
 
   const activos = empleados?.filter((e) => e.activo) ?? [];

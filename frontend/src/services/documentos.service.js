@@ -1,7 +1,9 @@
 import api from './api';
 
-export async function listarDocumentos(empleadoId) {
-  const { data } = await api.get('/documentos', { params: { empleado_id: empleadoId } });
+export async function listarDocumentos(empleadoId, { tipo, pagina, porPagina } = {}) {
+  const { data } = await api.get('/documentos', {
+    params: { empleado_id: empleadoId, tipo: tipo || undefined, pagina, por_pagina: porPagina },
+  });
   return data;
 }
 

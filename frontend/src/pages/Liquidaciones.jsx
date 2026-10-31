@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useAuth } from '../context/useAuth';
+import Paginacion from '../components/Paginacion';
 import {
   descargarLiquidacionPdf,
   generarLiquidacion,
@@ -19,21 +20,25 @@ function Liquidaciones() {
   const [periodo, setPeriodo] = useState('');
   const [desde, setDesde] = useState('');
   const [hasta, setHasta] = useState('');
+  const [pagina, setPagina] = useState(1);
   const [error, setError] = useState(null);
   const [errorFiltro, setErrorFiltro] = useState(null);
   const [errorPdf, setErrorPdf] = useState(null);
 
   const cargar = useCallback(
-    async (filtroDesde, filtroHasta) => {
-      const data = await obtenerHistorialRemuneraciones(empleadoId, filtroDesde, filtroHasta);
+    async (filtroDesde, filtroHasta, filtroPagina = 1) => {
+      const data = await obtenerHistorialRemuneraciones(empleadoId, filtroDesde, filtroHasta, filtroPagina);
       setHistorial(data);
     },
     [empleadoId],
   );
 
   useEffect(() => {
-    cargar('', '');
-  }, [cargar]);
+    cargar(desde, hasta, pagina);
+    // El filtro de fechas se vuelve a aplicar con handleFiltrar (más abajo); este efecto
+    // solo reacciona al cambio de página para no repetir la llamada al escribir.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pagina]);
 
   async function handleGenerar(e) {
     e.preventDefault();
@@ -41,7 +46,7 @@ function Liquidaciones() {
     try {
       await generarLiquidacion(Number(empleadoId), periodo);
       setPeriodo('');
-      await cargar(desde, hasta);
+      await cargar(desde, hasta, pagina);
     } catch (err) {
       setError(err.response?.data?.error || 'Error al generar la liquidación');
     }
@@ -63,7 +68,8 @@ function Liquidaciones() {
     e.preventDefault();
     setErrorFiltro(null);
     try {
-      await cargar(desde, hasta);
+      await cargar(desde, hasta, 1);
+      setPagina(1);
     } catch (err) {
       setErrorFiltro(err.response?.data?.error || 'Error al filtrar el historial');
     }
@@ -167,6 +173,12 @@ function Liquidaciones() {
             </tbody>
           </table>
         )}
+        <Paginacion
+          pagina={historial?.pagina || 1}
+          totalPaginas={historial?.totalPaginas || 1}
+          total={historial?.cantidad || 0}
+          onCambiarPagina={setPagina}
+        />
       </div>
     </div>
   );

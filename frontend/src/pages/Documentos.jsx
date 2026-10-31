@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { API_ORIGIN } from '../services/api';
 import { listarDocumentos, subirDocumento, eliminarDocumento } from '../services/documentos.service';
 import { IconEye, IconTrash } from '../components/icons';
+import Paginacion from '../components/Paginacion';
 
 function resolverUrl(url) {
   return url.startsWith('http') ? url : `${API_ORIGIN}${url}`;
@@ -11,19 +12,27 @@ function resolverUrl(url) {
 function Documentos() {
   const { empleadoId } = useParams();
   const [documentos, setDocumentos] = useState([]);
+  const [paginacion, setPaginacion] = useState({ pagina: 1, totalPaginas: 1, total: 0 });
+  const [filtroTipo, setFiltroTipo] = useState('');
+  const [pagina, setPagina] = useState(1);
   const [archivo, setArchivo] = useState(null);
   const [tipo, setTipo] = useState('');
   const [error, setError] = useState(null);
   const [subiendo, setSubiendo] = useState(false);
 
   const cargar = useCallback(async () => {
-    const data = await listarDocumentos(empleadoId);
-    setDocumentos(data);
-  }, [empleadoId]);
+    const data = await listarDocumentos(empleadoId, { tipo: filtroTipo || undefined, pagina });
+    setDocumentos(data.datos);
+    setPaginacion({ pagina: data.pagina, totalPaginas: data.totalPaginas, total: data.total });
+  }, [empleadoId, filtroTipo, pagina]);
 
   useEffect(() => {
     cargar();
   }, [cargar]);
+
+  useEffect(() => {
+    setPagina(1);
+  }, [filtroTipo]);
 
   async function handleSubir(e) {
     e.preventDefault();
@@ -59,22 +68,27 @@ function Documentos() {
         </div>
       </div>
 
-      <form onSubmit={handleSubir} className="card form-grid" style={{ maxWidth: 360, marginBottom: '1.5rem' }}>
+      <form onSubmit={handleSubir} className="card form-grid" style={{ marginBottom: '1.5rem' }}>
         <h2>Subir documento</h2>
-        <label className="field">
-          Tipo (opcional)
-          <input
-            value={tipo}
-            onChange={(e) => setTipo(e.target.value)}
-            placeholder="ej. cédula, certificado, contrato firmado"
-          />
-        </label>
-        <input
-          type="file"
-          accept="application/pdf,image/png,image/jpeg"
-          onChange={(e) => setArchivo(e.target.files[0] || null)}
-          required
-        />
+        <div className="form-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))' }}>
+          <label className="field">
+            Tipo (opcional)
+            <input
+              value={tipo}
+              onChange={(e) => setTipo(e.target.value)}
+              placeholder="ej. cédula, certificado, contrato firmado"
+            />
+          </label>
+          <label className="field">
+            Archivo
+            <input
+              type="file"
+              accept="application/pdf,image/png,image/jpeg"
+              onChange={(e) => setArchivo(e.target.files[0] || null)}
+              required
+            />
+          </label>
+        </div>
         {error && <p className="field-error">{error}</p>}
         <button type="submit" disabled={!archivo || subiendo}>
           {subiendo ? 'Subiendo...' : 'Subir documento'}
@@ -82,6 +96,17 @@ function Documentos() {
       </form>
 
       <div className="table-wrap">
+        <div className="table-toolbar">
+          <h2 style={{ margin: 0 }}>{paginacion.total} documento(s)</h2>
+          <div className="filtros-bar">
+            <input
+              type="search"
+              placeholder="Filtrar por tipo..."
+              value={filtroTipo}
+              onChange={(e) => setFiltroTipo(e.target.value)}
+            />
+          </div>
+        </div>
         {documentos.length === 0 ? (
           <div className="empty-state">Este empleado todavía no tiene documentos adjuntos.</div>
         ) : (
@@ -126,6 +151,12 @@ function Documentos() {
             </tbody>
           </table>
         )}
+        <Paginacion
+          pagina={paginacion.pagina}
+          totalPaginas={paginacion.totalPaginas}
+          total={paginacion.total}
+          onCambiarPagina={setPagina}
+        />
       </div>
     </div>
   );

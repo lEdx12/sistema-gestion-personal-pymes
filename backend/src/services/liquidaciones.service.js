@@ -14,6 +14,7 @@ const {
 const { generarPdfLiquidacion, rutaArchivo, nombreArchivo } = require('./liquidacionPdf.service');
 const { esPeriodoValido, obtenerBloquesSemanalesDelPeriodo } = require('../utils/periodo');
 const { slugificar } = require('../utils/slug');
+const { paginar } = require('../utils/paginacion');
 
 class ServiceError extends Error {
   constructor(status, message) {
@@ -134,7 +135,7 @@ async function obtenerPdfLiquidacion(id) {
  * períodos ("YYYY-MM"), más un resumen agregado (cantidad y promedio del líquido
  * pagado en el rango).
  */
-async function obtenerHistorialRemuneraciones({ empleadoId, desde, hasta }) {
+async function obtenerHistorialRemuneraciones({ empleadoId, desde, hasta, pagina, porPagina }) {
   if (!empleadoId) {
     throw new ServiceError(400, 'El parámetro "empleado_id" es obligatorio');
   }
@@ -153,9 +154,12 @@ async function obtenerHistorialRemuneraciones({ empleadoId, desde, hasta }) {
 
   const liquidaciones = await liquidacionModel.findAll({ empleadoId, desde, hasta });
 
+  // Los agregados (cantidad, promedio) se calculan sobre todo el rango filtrado, no
+  // solo sobre la página actual — paginar es solo para no listar cientos de filas.
   const cantidad = liquidaciones.length;
   const totalLiquido = liquidaciones.reduce((acc, l) => acc + Number(l.liquido_pagar), 0);
   const promedioLiquido = cantidad > 0 ? Math.round(totalLiquido / cantidad) : 0;
+  const paginaDeLiquidaciones = paginar(liquidaciones, { pagina, porPagina });
 
   return {
     empleado: { id: empleado.id, nombre: empleado.nombre, apellido: empleado.apellido, rut: empleado.rut },
@@ -164,7 +168,10 @@ async function obtenerHistorialRemuneraciones({ empleadoId, desde, hasta }) {
     cantidad,
     totalLiquido: Math.round(totalLiquido),
     promedioLiquido,
-    liquidaciones,
+    liquidaciones: paginaDeLiquidaciones.datos,
+    pagina: paginaDeLiquidaciones.pagina,
+    porPagina: paginaDeLiquidaciones.porPagina,
+    totalPaginas: paginaDeLiquidaciones.totalPaginas,
   };
 }
 

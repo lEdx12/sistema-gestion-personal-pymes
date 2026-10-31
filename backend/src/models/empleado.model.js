@@ -5,10 +5,24 @@ const COLUMNAS = `
   fecha_ingreso, cargo, sueldo_base, activo
 `;
 
-async function findAll({ incluirInactivos = false } = {}) {
-  const where = incluirInactivos ? '' : 'WHERE activo = TRUE';
+async function findAll({ incluirInactivos = false, texto } = {}) {
+  const condiciones = [];
+  const valores = [];
+
+  if (!incluirInactivos) {
+    condiciones.push('activo = TRUE');
+  }
+  if (texto) {
+    valores.push(`%${texto}%`);
+    condiciones.push(
+      `(rut ILIKE $${valores.length} OR nombre ILIKE $${valores.length} OR apellido ILIKE $${valores.length} OR cargo ILIKE $${valores.length})`,
+    );
+  }
+
+  const where = condiciones.length ? `WHERE ${condiciones.join(' AND ')}` : '';
   const { rows } = await pool.query(
     `SELECT ${COLUMNAS} FROM empleados ${where} ORDER BY apellido, nombre`,
+    valores,
   );
   return rows;
 }

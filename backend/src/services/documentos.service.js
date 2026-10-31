@@ -1,6 +1,7 @@
 const documentoModel = require('../models/documento.model');
 const empleadoModel = require('../models/empleado.model');
 const almacenamiento = require('./almacenamiento.service');
+const { paginar } = require('../utils/paginacion');
 
 class ServiceError extends Error {
   constructor(status, message) {
@@ -18,9 +19,10 @@ async function obtenerEmpleadoOFallar(empleadoId) {
   return empleado;
 }
 
-async function listarDocumentos(empleadoId) {
+async function listarDocumentos(empleadoId, { tipo, pagina, porPagina } = {}) {
   await obtenerEmpleadoOFallar(empleadoId);
-  return documentoModel.findAllByEmpleado(empleadoId);
+  const documentos = await documentoModel.findAllByEmpleado(empleadoId, { tipo });
+  return paginar(documentos, { pagina, porPagina });
 }
 
 async function subirDocumento(empleadoId, archivo, { tipo } = {}) {

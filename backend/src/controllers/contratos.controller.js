@@ -10,9 +10,9 @@ function manejarError(res, err) {
 
 async function listar(req, res) {
   try {
-    const { empleado_id } = req.query;
-    const contratos = await contratosService.listarContratos({ empleadoId: empleado_id });
-    res.json(contratos);
+    const { empleado_id, pagina, por_pagina: porPagina } = req.query;
+    const resultado = await contratosService.listarContratos({ empleadoId: empleado_id, pagina, porPagina });
+    res.json(resultado);
   } catch (err) {
     manejarError(res, err);
   }

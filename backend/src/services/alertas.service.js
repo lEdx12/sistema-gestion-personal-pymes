@@ -1,5 +1,6 @@
 const alertaModel = require('../models/alerta.model');
 const { envNumber } = require('../utils/env');
+const { paginar } = require('../utils/paginacion');
 
 class ServiceError extends Error {
   constructor(status, message) {
@@ -49,8 +50,9 @@ async function generarAlertasVencimiento() {
   return generadas;
 }
 
-async function listarAlertas(opciones) {
-  return alertaModel.findAll(opciones);
+async function listarAlertas({ soloNoLeidas, tipo, pagina, porPagina } = {}) {
+  const alertas = await alertaModel.findAll({ soloNoLeidas, tipo });
+  return paginar(alertas, { pagina, porPagina });
 }
 
 async function marcarAlertaLeida(id) {

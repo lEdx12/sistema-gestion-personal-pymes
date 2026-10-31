@@ -63,7 +63,7 @@ describe('PUT /api/asistencia/:id/salida', () => {
     const registro = await request(app)
       .get(`/api/asistencia?empleado_id=${empleadoId}`)
       .set('Authorization', authHeader);
-    const id = registro.body[0].id;
+    const id = registro.body.datos[0].id;
 
     const res = await request(app)
       .put(`/api/asistencia/${id}/salida`)
@@ -76,7 +76,7 @@ describe('PUT /api/asistencia/:id/salida', () => {
     const registro = await request(app)
       .get(`/api/asistencia?empleado_id=${empleadoId}`)
       .set('Authorization', authHeader);
-    const id = registro.body[0].id;
+    const id = registro.body.datos[0].id;
 
     const res = await request(app)
       .put(`/api/asistencia/${id}/salida`)
@@ -107,7 +107,7 @@ describe('PUT /api/asistencia/:id (edición)', () => {
     const listado = await request(app)
       .get(`/api/asistencia?empleado_id=${empleadoId}`)
       .set('Authorization', authHeader);
-    const registro = listado.body.find((r) => r.fecha.startsWith('2026-03-08'));
+    const registro = listado.body.datos.find((r) => r.fecha.startsWith('2026-03-08'));
 
     const res = await request(app)
       .put(`/api/asistencia/${registro.id}`)
@@ -122,7 +122,7 @@ describe('PUT /api/asistencia/:id (edición)', () => {
     const listado = await request(app)
       .get(`/api/asistencia?empleado_id=${empleadoId}`)
       .set('Authorization', authHeader);
-    const registro = listado.body.find((r) => r.fecha.startsWith('2026-03-08'));
+    const registro = listado.body.datos.find((r) => r.fecha.startsWith('2026-03-08'));
 
     const res = await request(app)
       .put(`/api/asistencia/${registro.id}`)
@@ -191,6 +191,26 @@ describe('GET /api/asistencia', () => {
       .get(`/api/asistencia?empleado_id=${empleadoId}`)
       .set('Authorization', authHeader);
     expect(res.status).toBe(200);
-    expect(res.body.length).toBeGreaterThanOrEqual(2);
+    expect(res.body.datos.length).toBeGreaterThanOrEqual(2);
+  });
+
+  it('filtra por ausente', async () => {
+    const res = await request(app)
+      .get('/api/asistencia')
+      .set('Authorization', authHeader)
+      .query({ empleado_id: empleadoId, ausente: 'true' });
+    expect(res.status).toBe(200);
+    expect(res.body.datos.length).toBeGreaterThanOrEqual(1);
+    expect(res.body.datos.every((r) => r.ausente === true)).toBe(true);
+  });
+
+  it('pagina los resultados', async () => {
+    const res = await request(app)
+      .get('/api/asistencia')
+      .set('Authorization', authHeader)
+      .query({ empleado_id: empleadoId, pagina: 1, por_pagina: 1 });
+    expect(res.body.datos).toHaveLength(1);
+    expect(res.body.porPagina).toBe(1);
+    expect(res.body.totalPaginas).toBeGreaterThanOrEqual(2);
   });
 });

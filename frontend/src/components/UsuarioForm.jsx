@@ -27,35 +27,37 @@ function UsuarioForm({ onSubmit, error, usuario, onCancelar }) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="form-grid" style={{ maxWidth: 360 }}>
-      <label className="field">
-        Nombre
-        <input name="nombre" value={form.nombre} onChange={handleChange} required />
-      </label>
-      <label className="field">
-        Email
-        <input name="email" type="email" value={form.email} onChange={handleChange} required />
-      </label>
-      {!esEdicion && (
+    <form onSubmit={handleSubmit} className="form-grid">
+      <div className="form-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))' }}>
         <label className="field">
-          Contraseña
-          <input
-            name="password"
-            type="password"
-            value={form.password}
-            onChange={handleChange}
-            minLength={8}
-            required
-          />
+          Nombre
+          <input name="nombre" value={form.nombre} onChange={handleChange} required />
         </label>
-      )}
-      <label className="field">
-        Rol
-        <select name="rol" value={form.rol} onChange={handleChange}>
-          <option value="administrador">Administrador</option>
-          <option value="gerente">Gerente</option>
-        </select>
-      </label>
+        <label className="field">
+          Email
+          <input name="email" type="email" value={form.email} onChange={handleChange} required />
+        </label>
+        {!esEdicion && (
+          <label className="field">
+            Contraseña
+            <input
+              name="password"
+              type="password"
+              value={form.password}
+              onChange={handleChange}
+              minLength={8}
+              required
+            />
+          </label>
+        )}
+        <label className="field">
+          Rol
+          <select name="rol" value={form.rol} onChange={handleChange}>
+            <option value="administrador">Administrador</option>
+            <option value="gerente">Gerente</option>
+          </select>
+        </label>
+      </div>
       {error && <p className="field-error">{error}</p>}
       <div className="form-actions">
         <button type="submit">{esEdicion ? 'Guardar cambios' : 'Crear usuario'}</button>

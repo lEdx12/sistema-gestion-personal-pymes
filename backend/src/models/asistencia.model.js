@@ -5,7 +5,7 @@ const COLUMNAS = `
   horas_extra, ausente, justificacion
 `;
 
-async function findAll({ empleadoId, desde, hasta } = {}) {
+async function findAll({ empleadoId, desde, hasta, ausente } = {}) {
   const condiciones = [];
   const valores = [];
 
@@ -20,6 +20,10 @@ async function findAll({ empleadoId, desde, hasta } = {}) {
   if (hasta) {
     valores.push(hasta);
     condiciones.push(`fecha <= $${valores.length}`);
+  }
+  if (ausente !== undefined) {
+    valores.push(ausente);
+    condiciones.push(`ausente = $${valores.length}`);
   }
 
   const where = condiciones.length ? `WHERE ${condiciones.join(' AND ')}` : '';

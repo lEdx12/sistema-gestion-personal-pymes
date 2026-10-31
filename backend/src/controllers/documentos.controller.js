@@ -10,8 +10,9 @@ function manejarError(res, err) {
 
 async function listar(req, res) {
   try {
-    const documentos = await documentosService.listarDocumentos(req.query.empleado_id);
-    res.json(documentos);
+    const { empleado_id, tipo, pagina, por_pagina: porPagina } = req.query;
+    const resultado = await documentosService.listarDocumentos(empleado_id, { tipo, pagina, porPagina });
+    res.json(resultado);
   } catch (err) {
     manejarError(res, err);
   }

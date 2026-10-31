@@ -1,7 +1,9 @@
 import api from './api';
 
-export async function listarAlertas(soloNoLeidas = false) {
-  const { data } = await api.get('/alertas', { params: { soloNoLeidas } });
+export async function listarAlertas({ soloNoLeidas = false, pagina, porPagina } = {}) {
+  const { data } = await api.get('/alertas', {
+    params: { soloNoLeidas, pagina, por_pagina: porPagina },
+  });
   return data;
 }
 

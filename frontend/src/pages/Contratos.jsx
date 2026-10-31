@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import ContratoForm from '../components/ContratoForm';
 import ContratoDocumento from '../components/ContratoDocumento';
+import Paginacion from '../components/Paginacion';
 import {
   listarContratos,
   crearContrato,
@@ -12,12 +13,15 @@ import {
 function Contratos() {
   const { empleadoId } = useParams();
   const [contratos, setContratos] = useState([]);
+  const [paginacion, setPaginacion] = useState({ pagina: 1, totalPaginas: 1, total: 0 });
+  const [pagina, setPagina] = useState(1);
   const [error, setError] = useState(null);
 
   const cargar = useCallback(async () => {
-    const data = await listarContratos(empleadoId);
-    setContratos(data);
-  }, [empleadoId]);
+    const data = await listarContratos(empleadoId, { pagina });
+    setContratos(data.datos);
+    setPaginacion({ pagina: data.pagina, totalPaginas: data.totalPaginas, total: data.total });
+  }, [empleadoId, pagina]);
 
   useEffect(() => {
     cargar();
@@ -65,7 +69,7 @@ function Contratos() {
         </div>
       </div>
 
-      <div className="card" style={{ marginBottom: '1.5rem', maxWidth: 400 }}>
+      <div className="card" style={{ marginBottom: '1.5rem' }}>
         {contratoActivo ? (
           <>
             <h2>Renovar contrato activo</h2>
@@ -112,6 +116,12 @@ function Contratos() {
             </tbody>
           </table>
         )}
+        <Paginacion
+          pagina={paginacion.pagina}
+          totalPaginas={paginacion.totalPaginas}
+          total={paginacion.total}
+          onCambiarPagina={setPagina}
+        />
       </div>
     </div>
   );

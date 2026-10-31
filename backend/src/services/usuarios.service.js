@@ -1,5 +1,6 @@
 const bcrypt = require('bcrypt');
 const usuarioModel = require('../models/usuario.model');
+const { paginar } = require('../utils/paginacion');
 
 class ServiceError extends Error {
   constructor(status, message) {
@@ -23,8 +24,9 @@ function validarPassword(password) {
   }
 }
 
-async function listarUsuarios(opciones) {
-  return usuarioModel.findAll(opciones);
+async function listarUsuarios({ incluirInactivos, texto, rol, pagina, porPagina } = {}) {
+  const usuarios = await usuarioModel.findAll({ incluirInactivos, texto, rol });
+  return paginar(usuarios, { pagina, porPagina });
 }
 
 async function obtenerUsuario(id) {

@@ -49,10 +49,22 @@ en texto plano).
 
 ## Endpoints
 
+RF-15 (filtros y paginación en los listados): los endpoints `GET` que listan una colección
+(empleados, usuarios, asistencia, contratos, documentos, alertas y el historial de
+liquidaciones) aceptan `?pagina=N&por_pagina=N` (por defecto página 1 de 10, máximo 100 por
+página — `src/utils/paginacion.js`) y devuelven `{ datos, total, pagina, porPagina,
+totalPaginas }` en vez de un arreglo plano. Cada recurso además admite sus propios filtros
+(`texto` búsqueda en empleados/usuarios, `rol` en usuarios, `ausente` en asistencia, `tipo`
+en documentos/alertas — ver la tabla de cada recurso). El historial de remuneraciones
+(`GET /api/liquidaciones/historial`) es la excepción de forma: sus agregados (`cantidad`,
+`totalLiquido`, `promedioLiquido`) se calculan sobre todo el rango filtrado, no solo sobre
+la página actual — solo el arreglo `liquidaciones` viene paginado. Pruebas en
+`tests/paginacion.test.js` y en los tests de cada recurso.
+
 | Método | Ruta | Body | Respuesta |
 |--------|------|------|-----------|
 | GET | `/api/health` | — | `{ status: 'ok' }` — único endpoint además de `/api/auth/*` que no exige token |
-| GET | `/api/empleados` | — (query opcional `?incluirInactivos=true`) | `200` lista de empleados (activos por defecto) |
+| GET | `/api/empleados` | — (query opcional `?incluirInactivos=true&texto=...&pagina=N&por_pagina=N`) | `200` `{ datos, total, pagina, porPagina, totalPaginas }` (activos por defecto; `texto` busca en rut/nombre/apellido/cargo) |
 | GET | `/api/empleados/:id` | — | `200` empleado / `404` si no existe |
 | POST | `/api/empleados` | `{ rut, nombre, apellido, fecha_ingreso, sueldo_base, fecha_nacimiento?, direccion?, telefono?, email?, cargo? }` | `201` empleado creado / `400` validación (campo obligatorio o RUT inválido) / `409` "Empleado ya registrado" si el RUT ya existe |
 | PUT | `/api/empleados/:id` | mismos campos que POST (sin `rut`) | `200` empleado actualizado / `400` / `404` |
@@ -74,7 +86,7 @@ ahora el frontend la completa por sí mismo en vez de pedirla.
 
 | Método | Ruta | Body | Respuesta |
 |--------|------|------|-----------|
-| GET | `/api/contratos` | — (query opcional `?empleado_id=N`) | `200` lista de contratos |
+| GET | `/api/contratos` | — (query opcional `?empleado_id=N&pagina=N&por_pagina=N`) | `200` `{ datos, total, pagina, porPagina, totalPaginas }` |
 | GET | `/api/contratos/:id` | — | `200` contrato / `404` |
 | POST | `/api/contratos` | `{ empleado_id, tipo, fecha_inicio, fecha_termino?, documento_url? }` | `201` creado / `400` validación / `404` empleado no existe / `409` empleado ya tiene contrato activo |
 | PUT | `/api/contratos/:id` | mismos campos que POST (sin `empleado_id`) | `200` actualizado / `400` / `404` |
@@ -94,7 +106,7 @@ en `tests/contratos.test.js`.
 
 | Método | Ruta | Body | Respuesta |
 |--------|------|------|-----------|
-| GET | `/api/asistencia` | — (query opcional `?empleado_id=N&desde=YYYY-MM-DD&hasta=YYYY-MM-DD`) | `200` lista de registros |
+| GET | `/api/asistencia` | — (query opcional `?empleado_id=N&desde=YYYY-MM-DD&hasta=YYYY-MM-DD&ausente=true\|false&pagina=N&por_pagina=N`) | `200` `{ datos, total, pagina, porPagina, totalPaginas }` |
 | GET | `/api/asistencia/:id` | — | `200` registro / `404` |
 | POST | `/api/asistencia/entrada` | `{ empleado_id, fecha, hora_entrada }` | `201` registro creado / `400` validación / `404` empleado no existe / `409` ya existe registro para esa fecha |
 | PUT | `/api/asistencia/:id/salida` | `{ hora_salida }` | `200` registro actualizado / `400` si es igual a la entrada o falta entrada / `409` ya tiene salida marcada / `404` |
@@ -192,7 +204,7 @@ en el esquema). Pruebas en `tests/liquidaciones.test.js` y `tests/numeroALetras.
 
 | Método | Ruta | Query | Respuesta |
 |--------|------|-------|-----------|
-| GET | `/api/liquidaciones/historial` | `empleado_id` (obligatorio) + `desde`/`hasta` opcionales (`YYYY-MM`) | `200` `{ empleado, desde, hasta, cantidad, totalLiquido, promedioLiquido, liquidaciones }` / `400` / `404` |
+| GET | `/api/liquidaciones/historial` | `empleado_id` (obligatorio) + `desde`/`hasta` opcionales (`YYYY-MM`) + `pagina`/`por_pagina` opcionales | `200` `{ empleado, desde, hasta, cantidad, totalLiquido, promedioLiquido, liquidaciones, pagina, porPagina, totalPaginas }` (agregados sobre todo el rango, `liquidaciones` paginado) / `400` / `404` |
 
 RF-13 (historial de remuneraciones): filtra por rango de períodos sobre la misma tabla
 `liquidaciones` — como `periodo` es `VARCHAR` con formato fijo `YYYY-MM`, la comparación
@@ -260,7 +272,7 @@ ajustan según `usuario.rol`. Pruebas en `tests/roles.test.js`.
 
 | Método | Ruta | Body | Respuesta |
 |--------|------|------|-----------|
-| GET | `/api/usuarios` | — (query opcional `?incluirInactivos=true`) | `200` lista de usuarios (activos por defecto, sin `password_hash`) |
+| GET | `/api/usuarios` | — (query opcional `?incluirInactivos=true&texto=...&rol=administrador\|gerente&pagina=N&por_pagina=N`) | `200` `{ datos, total, pagina, porPagina, totalPaginas }` (activos por defecto, sin `password_hash`; `texto` busca en nombre/email) |
 | GET | `/api/usuarios/:id` | — | `200` usuario / `404` |
 | POST | `/api/usuarios` | `{ nombre, email, password, rol }` (`rol`: `administrador`\|`gerente`, `password` ≥ 8 caracteres) | `201` usuario creado / `400` validación / `409` email ya registrado |
 | PUT | `/api/usuarios/:id` | `{ nombre, email, rol }` | `200` actualizado / `400` / `404` / `409` email ya usado por otro usuario |
@@ -293,7 +305,7 @@ flujo self-service con un Gerente).
 
 | Método | Ruta | Query/Body | Respuesta |
 |--------|------|------------|-----------|
-| GET | `/api/alertas` | query opcional `?soloNoLeidas=true` | `200` lista de alertas (con datos del empleado), más recientes primero |
+| GET | `/api/alertas` | query opcional `?soloNoLeidas=true&tipo=...&pagina=N&por_pagina=N` | `200` `{ datos, total, pagina, porPagina, totalPaginas }` (con datos del empleado), más recientes primero |
 | PUT | `/api/alertas/:id/leida` | — | `200` alerta con `leida: true` / `404` |
 | POST | `/api/alertas/generar` | — | `201` lista de alertas recién creadas en esta corrida (puede ser vacía) |
 
@@ -315,7 +327,7 @@ RF-02). Pruebas en `tests/alertas.test.js`.
 
 | Método | Ruta | Query/Body | Respuesta |
 |--------|------|------------|-----------|
-| GET | `/api/documentos` | query `empleado_id` (obligatorio) | `200` lista de documentos del empleado, más reciente primero / `400` / `404` empleado no existe |
+| GET | `/api/documentos` | query `empleado_id` (obligatorio) + `tipo`/`pagina`/`por_pagina` opcionales | `200` `{ datos, total, pagina, porPagina, totalPaginas }` del empleado, más reciente primero / `400` / `404` empleado no existe |
 | POST | `/api/documentos` | `multipart/form-data`: `empleado_id`, campo `documento` (PDF/PNG/JPG, máx. 10MB), `tipo?` (texto libre) | `201` documento creado / `400` validación o tipo de archivo no permitido / `404` empleado no existe |
 | DELETE | `/api/documentos/:id` | — | `204` / `404` |
 

@@ -1,7 +1,9 @@
 import api from './api';
 
-export async function listarAsistencia(empleadoId) {
-  const { data } = await api.get('/asistencia', { params: { empleado_id: empleadoId } });
+export async function listarAsistencia(empleadoId, { ausente, pagina, porPagina } = {}) {
+  const { data } = await api.get('/asistencia', {
+    params: { empleado_id: empleadoId, ausente, pagina, por_pagina: porPagina },
+  });
   return data;
 }
 

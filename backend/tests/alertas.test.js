@@ -66,7 +66,7 @@ describe('POST /api/alertas/generar', () => {
     expect(res.body.find((a) => a.contrato_id === contratoPorVencerId)).toBeUndefined();
 
     const listado = await request(app).get('/api/alertas').set('Authorization', authHeader);
-    const deEsteContrato = listado.body.filter((a) => a.contrato_id === contratoPorVencerId);
+    const deEsteContrato = listado.body.datos.filter((a) => a.contrato_id === contratoPorVencerId);
     expect(deEsteContrato).toHaveLength(1);
   });
 });
@@ -75,7 +75,7 @@ describe('GET /api/alertas', () => {
   it('lista la alerta generada, con los datos del empleado', async () => {
     const res = await request(app).get('/api/alertas').set('Authorization', authHeader);
     expect(res.status).toBe(200);
-    const alerta = res.body.find((a) => a.contrato_id === contratoPorVencerId);
+    const alerta = res.body.datos.find((a) => a.contrato_id === contratoPorVencerId);
     expect(alerta.empleado_nombre).toBe('Flavia');
     expect(alerta.mensaje).toContain('Flavia Vences');
   });
@@ -86,14 +86,25 @@ describe('GET /api/alertas', () => {
       .set('Authorization', authHeader)
       .query({ soloNoLeidas: 'true' });
     expect(res.status).toBe(200);
-    expect(res.body.every((a) => a.leida === false)).toBe(true);
+    expect(res.body.datos.every((a) => a.leida === false)).toBe(true);
+  });
+
+  it('filtra por tipo y devuelve metadatos de paginación', async () => {
+    const res = await request(app)
+      .get('/api/alertas')
+      .set('Authorization', authHeader)
+      .query({ tipo: 'vencimiento_contrato', pagina: 1, por_pagina: 1 });
+    expect(res.status).toBe(200);
+    expect(res.body.datos).toHaveLength(1);
+    expect(res.body.datos.every((a) => a.tipo === 'vencimiento_contrato')).toBe(true);
+    expect(res.body.porPagina).toBe(1);
   });
 });
 
 describe('PUT /api/alertas/:id/leida', () => {
   it('marca una alerta como leída', async () => {
     const listado = await request(app).get('/api/alertas').set('Authorization', authHeader);
-    const alerta = listado.body.find((a) => a.contrato_id === contratoPorVencerId);
+    const alerta = listado.body.datos.find((a) => a.contrato_id === contratoPorVencerId);
 
     const res = await request(app)
       .put(`/api/alertas/${alerta.id}/leida`)

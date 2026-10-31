@@ -106,8 +106,22 @@ describe('GET /api/documentos', () => {
       .set('Authorization', authHeader)
       .query({ empleado_id: empleadoId });
     expect(res.status).toBe(200);
-    expect(res.body).toHaveLength(1);
-    expect(res.body[0].nombre).toBe('cedula.pdf');
+    expect(res.body.datos).toHaveLength(1);
+    expect(res.body.datos[0].nombre).toBe('cedula.pdf');
+  });
+
+  it('filtra por tipo', async () => {
+    const res = await request(app)
+      .get('/api/documentos')
+      .set('Authorization', authHeader)
+      .query({ empleado_id: empleadoId, tipo: 'cedula' });
+    expect(res.body.datos).toHaveLength(1);
+
+    const sinCoincidencia = await request(app)
+      .get('/api/documentos')
+      .set('Authorization', authHeader)
+      .query({ empleado_id: empleadoId, tipo: 'contrato firmado' });
+    expect(sinCoincidencia.body.datos).toHaveLength(0);
   });
 
   it('rechaza si falta empleado_id', async () => {
@@ -122,7 +136,7 @@ describe('DELETE /api/documentos/:id', () => {
       .get('/api/documentos')
       .set('Authorization', authHeader)
       .query({ empleado_id: empleadoId });
-    const documento = listado.body[0];
+    const documento = listado.body.datos[0];
     const nombreArchivo = path.basename(documento.url);
 
     const res = await request(app).delete(`/api/documentos/${documento.id}`).set('Authorization', authHeader);
@@ -135,7 +149,7 @@ describe('DELETE /api/documentos/:id', () => {
       .get('/api/documentos')
       .set('Authorization', authHeader)
       .query({ empleado_id: empleadoId });
-    expect(listadoFinal.body).toHaveLength(0);
+    expect(listadoFinal.body.datos).toHaveLength(0);
   });
 
   it('rechaza si el documento no existe', async () => {

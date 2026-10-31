@@ -68,9 +68,58 @@ describe('POST /api/empleados', () => {
 
 describe('GET /api/empleados', () => {
   it('lista solo empleados activos por defecto', async () => {
-    const res = await request(app).get('/api/empleados').set('Authorization', authHeader);
+    const res = await request(app)
+      .get('/api/empleados')
+      .set('Authorization', authHeader)
+      .query({ texto: RUT_PRUEBA_NORMALIZADO });
     expect(res.status).toBe(200);
-    expect(res.body.find((e) => e.rut === RUT_PRUEBA_NORMALIZADO)).toBeTruthy();
+    expect(res.body.datos.find((e) => e.rut === RUT_PRUEBA_NORMALIZADO)).toBeTruthy();
+  });
+});
+
+describe('GET /api/empleados — filtros y paginación', () => {
+  const RUT_PAGINA_1 = generarRutDePrueba();
+  const RUT_PAGINA_2 = generarRutDePrueba();
+  const CARGO_COMPARTIDO = `Repartidor-${Date.now()}`;
+
+  beforeAll(async () => {
+    for (const rut of [RUT_PAGINA_1, RUT_PAGINA_2]) {
+      await request(app)
+        .post('/api/empleados')
+        .set('Authorization', authHeader)
+        .send({ ...empleadoValido, rut, cargo: CARGO_COMPARTIDO });
+    }
+  });
+
+  afterAll(async () => {
+    await pool.query('DELETE FROM empleados WHERE rut = ANY($1)', [[RUT_PAGINA_1, RUT_PAGINA_2]]);
+  });
+
+  it('filtra por texto (busca en rut/nombre/apellido/cargo)', async () => {
+    const res = await request(app)
+      .get('/api/empleados')
+      .set('Authorization', authHeader)
+      .query({ texto: CARGO_COMPARTIDO });
+    expect(res.status).toBe(200);
+    expect(res.body.datos).toHaveLength(2);
+    expect(res.body.total).toBe(2);
+  });
+
+  it('pagina los resultados filtrados', async () => {
+    const pagina1 = await request(app)
+      .get('/api/empleados')
+      .set('Authorization', authHeader)
+      .query({ texto: CARGO_COMPARTIDO, pagina: 1, por_pagina: 1 });
+    expect(pagina1.body.datos).toHaveLength(1);
+    expect(pagina1.body.total).toBe(2);
+    expect(pagina1.body.totalPaginas).toBe(2);
+
+    const pagina2 = await request(app)
+      .get('/api/empleados')
+      .set('Authorization', authHeader)
+      .query({ texto: CARGO_COMPARTIDO, pagina: 2, por_pagina: 1 });
+    expect(pagina2.body.datos).toHaveLength(1);
+    expect(pagina2.body.datos[0].rut).not.toBe(pagina1.body.datos[0].rut);
   });
 });
 
@@ -101,8 +150,11 @@ describe('PUT /api/empleados/:id/desactivar', () => {
     expect(reactivado.status).toBe(200);
     expect(reactivado.body.activo).toBe(true);
 
-    const listado = await request(app).get('/api/empleados').set('Authorization', authHeader);
-    expect(listado.body.find((e) => e.rut === RUT_DESACTIVAR)).toBeTruthy();
+    const listado = await request(app)
+      .get('/api/empleados')
+      .set('Authorization', authHeader)
+      .query({ texto: RUT_DESACTIVAR });
+    expect(listado.body.datos.find((e) => e.rut === RUT_DESACTIVAR)).toBeTruthy();
 
     await pool.query('DELETE FROM empleados WHERE rut = $1', [RUT_DESACTIVAR]);
   });

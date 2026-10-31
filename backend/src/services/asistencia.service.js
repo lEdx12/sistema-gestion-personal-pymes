@@ -6,6 +6,7 @@ const {
 } = require('./horasTrabajadas.service');
 const { calcularHorasExtra } = require('./horasExtra.service');
 const { esPeriodoValido, rangoDelPeriodo, obtenerBloquesSemanalesDelPeriodo } = require('../utils/periodo');
+const { paginar } = require('../utils/paginacion');
 
 class ServiceError extends Error {
   constructor(status, message) {
@@ -20,8 +21,9 @@ async function asegurarEmpleadoExiste(empleadoId) {
   return empleado;
 }
 
-async function listarAsistencia(opciones) {
-  return asistenciaModel.findAll(opciones);
+async function listarAsistencia({ empleadoId, desde, hasta, ausente, pagina, porPagina } = {}) {
+  const registros = await asistenciaModel.findAll({ empleadoId, desde, hasta, ausente });
+  return paginar(registros, { pagina, porPagina });
 }
 
 async function obtenerAsistencia(id) {

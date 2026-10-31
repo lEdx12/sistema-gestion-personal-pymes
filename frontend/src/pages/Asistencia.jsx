@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import AsistenciaRow from '../components/AsistenciaRow';
+import Paginacion from '../components/Paginacion';
 import {
   listarAsistencia,
   marcarEntrada,
@@ -17,6 +18,9 @@ const FORM_RESUMEN_VACIO = { desde: '', hasta: '' };
 function Asistencia() {
   const { empleadoId } = useParams();
   const [registros, setRegistros] = useState([]);
+  const [paginacion, setPaginacion] = useState({ pagina: 1, totalPaginas: 1, total: 0 });
+  const [filtroAusente, setFiltroAusente] = useState('');
+  const [pagina, setPagina] = useState(1);
   const [error, setError] = useState(null);
   const [formEntrada, setFormEntrada] = useState(FORM_ENTRADA_VACIO);
   const [formAusencia, setFormAusencia] = useState(FORM_AUSENCIA_VACIO);
@@ -24,13 +28,18 @@ function Asistencia() {
   const [resumen, setResumen] = useState(null);
 
   const cargar = useCallback(async () => {
-    const data = await listarAsistencia(empleadoId);
-    setRegistros(data);
-  }, [empleadoId]);
+    const data = await listarAsistencia(empleadoId, { ausente: filtroAusente || undefined, pagina });
+    setRegistros(data.datos);
+    setPaginacion({ pagina: data.pagina, totalPaginas: data.totalPaginas, total: data.total });
+  }, [empleadoId, filtroAusente, pagina]);
 
   useEffect(() => {
     cargar();
   }, [cargar]);
+
+  useEffect(() => {
+    setPagina(1);
+  }, [filtroAusente]);
 
   async function handleEntrada(e) {
     e.preventDefault();
@@ -163,6 +172,16 @@ function Asistencia() {
       </div>
 
       <div className="table-wrap">
+        <div className="table-toolbar">
+          <h2 style={{ margin: 0 }}>{paginacion.total} registro(s)</h2>
+          <div className="filtros-bar">
+            <select value={filtroAusente} onChange={(e) => setFiltroAusente(e.target.value)}>
+              <option value="">Todos</option>
+              <option value="false">Solo asistencia</option>
+              <option value="true">Solo ausencias</option>
+            </select>
+          </div>
+        </div>
         {registros.length === 0 ? (
           <div className="empty-state">Todavía no hay registros de asistencia.</div>
         ) : (
@@ -190,6 +209,12 @@ function Asistencia() {
             </tbody>
           </table>
         )}
+        <Paginacion
+          pagina={paginacion.pagina}
+          totalPaginas={paginacion.totalPaginas}
+          total={paginacion.total}
+          onCambiarPagina={setPagina}
+        />
       </div>
     </div>
   );

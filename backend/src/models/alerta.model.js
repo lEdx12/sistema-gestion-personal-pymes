@@ -5,14 +5,26 @@ const COLUMNAS = `
 `;
 const COLUMNAS_PLANAS = 'id, empleado_id, contrato_id, tipo, mensaje, fecha_alerta, leida, created_at';
 
-async function findAll({ soloNoLeidas = false } = {}) {
-  const where = soloNoLeidas ? 'WHERE a.leida = FALSE' : '';
+async function findAll({ soloNoLeidas = false, tipo } = {}) {
+  const condiciones = [];
+  const valores = [];
+
+  if (soloNoLeidas) {
+    condiciones.push('a.leida = FALSE');
+  }
+  if (tipo) {
+    valores.push(tipo);
+    condiciones.push(`a.tipo = $${valores.length}`);
+  }
+
+  const where = condiciones.length ? `WHERE ${condiciones.join(' AND ')}` : '';
   const { rows } = await pool.query(
     `SELECT ${COLUMNAS}, e.nombre AS empleado_nombre, e.apellido AS empleado_apellido, e.rut AS empleado_rut
      FROM alertas a
      JOIN empleados e ON e.id = a.empleado_id
      ${where}
      ORDER BY a.fecha_alerta DESC, a.id DESC`,
+    valores,
   );
   return rows;
 }

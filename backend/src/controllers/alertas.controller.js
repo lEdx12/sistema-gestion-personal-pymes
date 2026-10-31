@@ -11,8 +11,9 @@ function manejarError(res, err) {
 async function listar(req, res) {
   try {
     const soloNoLeidas = req.query.soloNoLeidas === 'true';
-    const alertas = await alertasService.listarAlertas({ soloNoLeidas });
-    res.json(alertas);
+    const { tipo, pagina, por_pagina: porPagina } = req.query;
+    const resultado = await alertasService.listarAlertas({ soloNoLeidas, tipo, pagina, porPagina });
+    res.json(resultado);
   } catch (err) {
     manejarError(res, err);
   }

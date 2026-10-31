@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import EmpleadoForm from '../components/EmpleadoForm';
+import Paginacion from '../components/Paginacion';
 import { IconEdit, IconFileText, IconClock, IconCash, IconFolder, IconPower } from '../components/icons';
 import {
   listarEmpleados,
@@ -16,18 +17,26 @@ function formatearMonto(valor) {
 
 function Empleados() {
   const [empleados, setEmpleados] = useState([]);
+  const [paginacion, setPaginacion] = useState({ pagina: 1, totalPaginas: 1, total: 0 });
   const [error, setError] = useState(null);
   const [mostrarInactivos, setMostrarInactivos] = useState(false);
+  const [texto, setTexto] = useState('');
+  const [pagina, setPagina] = useState(1);
   const [empleadoEditando, setEmpleadoEditando] = useState(null);
 
   const cargar = useCallback(async () => {
-    const data = await listarEmpleados(mostrarInactivos);
-    setEmpleados(data);
-  }, [mostrarInactivos]);
+    const data = await listarEmpleados({ incluirInactivos: mostrarInactivos, texto, pagina });
+    setEmpleados(data.datos);
+    setPaginacion({ pagina: data.pagina, totalPaginas: data.totalPaginas, total: data.total });
+  }, [mostrarInactivos, texto, pagina]);
 
   useEffect(() => {
     cargar();
   }, [cargar]);
+
+  useEffect(() => {
+    setPagina(1);
+  }, [mostrarInactivos, texto]);
 
   async function handleGuardar(form) {
     setError(null);
@@ -91,15 +100,23 @@ function Empleados() {
 
       <div className="table-wrap">
         <div className="table-toolbar">
-          <h2 style={{ margin: 0 }}>{empleados.length} empleado(s)</h2>
-          <label className="checkbox-label">
+          <h2 style={{ margin: 0 }}>{paginacion.total} empleado(s)</h2>
+          <div className="filtros-bar">
             <input
-              type="checkbox"
-              checked={mostrarInactivos}
-              onChange={(e) => setMostrarInactivos(e.target.checked)}
+              type="search"
+              placeholder="Buscar por RUT, nombre, apellido o cargo..."
+              value={texto}
+              onChange={(e) => setTexto(e.target.value)}
             />
-            Mostrar empleados inactivos
-          </label>
+            <label className="checkbox-label">
+              <input
+                type="checkbox"
+                checked={mostrarInactivos}
+                onChange={(e) => setMostrarInactivos(e.target.checked)}
+              />
+              Mostrar empleados inactivos
+            </label>
+          </div>
         </div>
 
         {empleados.length === 0 ? (
@@ -178,6 +195,12 @@ function Empleados() {
             </tbody>
           </table>
         )}
+        <Paginacion
+          pagina={paginacion.pagina}
+          totalPaginas={paginacion.totalPaginas}
+          total={paginacion.total}
+          onCambiarPagina={setPagina}
+        />
       </div>
     </div>
   );

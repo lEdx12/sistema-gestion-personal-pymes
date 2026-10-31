@@ -11,8 +11,9 @@ function manejarError(res, err) {
 async function listar(req, res) {
   try {
     const incluirInactivos = req.query.incluirInactivos === 'true';
-    const empleados = await empleadosService.listarEmpleados({ incluirInactivos });
-    res.json(empleados);
+    const { texto, pagina, por_pagina: porPagina } = req.query;
+    const resultado = await empleadosService.listarEmpleados({ incluirInactivos, texto, pagina, porPagina });
+    res.json(resultado);
   } catch (err) {
     manejarError(res, err);
   }

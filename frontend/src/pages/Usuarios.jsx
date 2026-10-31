@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useAuth } from '../context/useAuth';
 import UsuarioForm from '../components/UsuarioForm';
+import Paginacion from '../components/Paginacion';
 import { IconEdit, IconKey, IconPower } from '../components/icons';
 import {
   listarUsuarios,
@@ -25,20 +26,29 @@ function generarPasswordTemporal() {
 function Usuarios() {
   const { usuario: usuarioActual } = useAuth();
   const [usuarios, setUsuarios] = useState([]);
+  const [paginacion, setPaginacion] = useState({ pagina: 1, totalPaginas: 1, total: 0 });
   const [error, setError] = useState(null);
   const [mostrarInactivos, setMostrarInactivos] = useState(false);
+  const [texto, setTexto] = useState('');
+  const [rol, setRol] = useState('');
+  const [pagina, setPagina] = useState(1);
   const [usuarioEditando, setUsuarioEditando] = useState(null);
   const [passwordGenerada, setPasswordGenerada] = useState(null); // { id, password }
   const [errorPassword, setErrorPassword] = useState(null);
 
   const cargar = useCallback(async () => {
-    const data = await listarUsuarios(mostrarInactivos);
-    setUsuarios(data);
-  }, [mostrarInactivos]);
+    const data = await listarUsuarios({ incluirInactivos: mostrarInactivos, texto, rol, pagina });
+    setUsuarios(data.datos);
+    setPaginacion({ pagina: data.pagina, totalPaginas: data.totalPaginas, total: data.total });
+  }, [mostrarInactivos, texto, rol, pagina]);
 
   useEffect(() => {
     cargar();
   }, [cargar]);
+
+  useEffect(() => {
+    setPagina(1);
+  }, [mostrarInactivos, texto, rol]);
 
   async function handleGuardar(form) {
     setError(null);
@@ -114,7 +124,7 @@ function Usuarios() {
         </div>
       </div>
 
-      <div className="card" style={{ marginBottom: '1.5rem', maxWidth: 400 }}>
+      <div className="card" style={{ marginBottom: '1.5rem' }}>
         <h2>{usuarioEditando ? `Editar usuario: ${usuarioEditando.email}` : 'Crear usuario'}</h2>
         <UsuarioForm
           onSubmit={handleGuardar}
@@ -128,15 +138,28 @@ function Usuarios() {
 
       <div className="table-wrap">
         <div className="table-toolbar">
-          <h2 style={{ margin: 0 }}>{usuarios.length} usuario(s)</h2>
-          <label className="checkbox-label">
+          <h2 style={{ margin: 0 }}>{paginacion.total} usuario(s)</h2>
+          <div className="filtros-bar">
             <input
-              type="checkbox"
-              checked={mostrarInactivos}
-              onChange={(e) => setMostrarInactivos(e.target.checked)}
+              type="search"
+              placeholder="Buscar por nombre o email..."
+              value={texto}
+              onChange={(e) => setTexto(e.target.value)}
             />
-            Mostrar usuarios inactivos
-          </label>
+            <select value={rol} onChange={(e) => setRol(e.target.value)}>
+              <option value="">Todos los roles</option>
+              <option value="administrador">Administrador</option>
+              <option value="gerente">Gerente</option>
+            </select>
+            <label className="checkbox-label">
+              <input
+                type="checkbox"
+                checked={mostrarInactivos}
+                onChange={(e) => setMostrarInactivos(e.target.checked)}
+              />
+              Mostrar usuarios inactivos
+            </label>
+          </div>
         </div>
 
         {usuarios.length === 0 ? (
@@ -242,6 +265,12 @@ function Usuarios() {
           </tbody>
         </table>
         )}
+        <Paginacion
+          pagina={paginacion.pagina}
+          totalPaginas={paginacion.totalPaginas}
+          total={paginacion.total}
+          onCambiarPagina={setPagina}
+        />
       </div>
     </div>
   );
