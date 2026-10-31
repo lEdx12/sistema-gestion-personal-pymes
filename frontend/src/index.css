@@ -198,8 +198,10 @@ button[type='submit']:hover,
   color: var(--text-muted);
 }
 
-/* .btn-ghost en un <a>/<Link> (ej. "Detalle" en Liquidaciones): la regla `button {}` de
-   arriba no alcanza a los enlaces, así que necesita su propia forma de botón. */
+/* .btn-ghost en un <a>/<Link> (ej. "Detalle" en Liquidaciones, junto a "Descargar PDF"):
+   la regla `button {}` de arriba no alcanza a los enlaces, así que necesita su propia
+   forma de botón — con el mismo peso visual que un botón normal (no transparente como
+   el `.btn-ghost` de un <button>), para que ambas acciones de la fila se vean parejas. */
 a.btn-ghost {
   display: inline-flex;
   align-items: center;
@@ -207,13 +209,17 @@ a.btn-ghost {
   font-weight: 500;
   font-size: 0.87rem;
   border-radius: var(--radius-sm);
-  border: 1px solid transparent;
+  border: 1px solid var(--border-strong);
+  background: var(--surface);
+  color: var(--text);
   padding: 0.5rem 0.9rem;
   line-height: 1.2;
   text-decoration: none;
+  box-shadow: var(--shadow-xs);
 }
 
 a.btn-ghost:hover {
+  background: var(--surface-hover);
   text-decoration: none;
 }
 
