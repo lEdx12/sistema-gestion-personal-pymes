@@ -3,7 +3,7 @@ const fs = require('fs');
 const path = require('path');
 const app = require('../src/app');
 const pool = require('../src/config/db');
-const { obtenerAuthHeader } = require('./helpers/auth');
+const { obtenerAuthHeader, obtenerAuthHeaderGerente } = require('./helpers/auth');
 const { generarRutDePrueba } = require('./helpers/rut');
 
 const RUT_EMPLEADO = generarRutDePrueba();
@@ -229,6 +229,39 @@ describe('RF-16/RF-17: movilización, colación e impuesto único (configurables
 
     expect(res.status).toBe(201);
     expect(Number(res.body.descuento_impuesto)).toBe(0);
+  });
+});
+
+describe('GET /api/liquidaciones/:id', () => {
+  it('incluye nombre, apellido y rut del empleado (RF-18: página de detalle)', async () => {
+    const listado = await request(app)
+      .get(`/api/liquidaciones?empleado_id=${empleadoId}`)
+      .set('Authorization', authHeader);
+    const liquidacion = listado.body[0];
+
+    const res = await request(app).get(`/api/liquidaciones/${liquidacion.id}`).set('Authorization', authHeader);
+    expect(res.status).toBe(200);
+    expect(res.body.empleado_nombre).toBe('Rosa');
+    expect(res.body.empleado_apellido).toBe('Ibarra');
+    expect(res.body.empleado_rut).toBe(RUT_EMPLEADO);
+  });
+
+  it('es accesible también para un Gerente (solo lectura)', async () => {
+    const authHeaderGerente = await obtenerAuthHeaderGerente();
+    const listado = await request(app)
+      .get(`/api/liquidaciones?empleado_id=${empleadoId}`)
+      .set('Authorization', authHeader);
+    const liquidacion = listado.body[0];
+
+    const res = await request(app)
+      .get(`/api/liquidaciones/${liquidacion.id}`)
+      .set('Authorization', authHeaderGerente);
+    expect(res.status).toBe(200);
+  });
+
+  it('rechaza si la liquidación no existe', async () => {
+    const res = await request(app).get('/api/liquidaciones/999999').set('Authorization', authHeader);
+    expect(res.status).toBe(404);
   });
 });
 

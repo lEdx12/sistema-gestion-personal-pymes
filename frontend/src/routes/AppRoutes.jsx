@@ -9,6 +9,7 @@ import Empleados from '../pages/Empleados';
 import Contratos from '../pages/Contratos';
 import Asistencia from '../pages/Asistencia';
 import Liquidaciones from '../pages/Liquidaciones';
+import LiquidacionDetalle from '../pages/LiquidacionDetalle';
 import ReporteAsistencia from '../pages/ReporteAsistencia';
 import Usuarios from '../pages/Usuarios';
 import Alertas from '../pages/Alertas';
@@ -36,6 +37,7 @@ function AppRoutes() {
             <Route path="/configuracion" element={<Configuracion />} />
           </Route>
           <Route path="/empleados/:empleadoId/liquidaciones" element={<Liquidaciones />} />
+          <Route path="/liquidaciones/:id" element={<LiquidacionDetalle />} />
           <Route path="/reportes/asistencia" element={<ReporteAsistencia />} />
         </Route>
       </Route>

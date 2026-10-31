@@ -82,7 +82,10 @@ function Liquidaciones() {
           <Link to={esAdministrador ? '/empleados' : '/'} className="back-link">
             ← Volver
           </Link>
-          <h1>Liquidaciones del empleado #{empleadoId}</h1>
+          <h1>
+            Liquidaciones de{' '}
+            {historial?.empleado ? `${historial.empleado.nombre} ${historial.empleado.apellido}` : '...'}
+          </h1>
           {historial && (
             <p className="page-subtitle">
               {historial.cantidad} liquidación(es)
@@ -137,16 +140,6 @@ function Liquidaciones() {
               <tr>
                 <th>Período</th>
                 <th className="num">Sueldo base</th>
-                <th className="num">Horas extra</th>
-                <th className="num">Gratificación</th>
-                <th className="num">Movilización</th>
-                <th className="num">Colación</th>
-                <th className="num">Desc. AFP</th>
-                <th className="num">Desc. salud</th>
-                <th className="num">Desc. cesantía</th>
-                <th className="num">Desc. impuesto</th>
-                <th className="num">Total haberes</th>
-                <th className="num">Total descuentos</th>
                 <th className="num">Líquido a pagar</th>
                 <th></th>
               </tr>
@@ -156,23 +149,18 @@ function Liquidaciones() {
                 <tr key={l.id}>
                   <td>{l.periodo}</td>
                   <td className="num">${formatearMonto(l.sueldo_base)}</td>
-                  <td className="num">${formatearMonto(l.horas_extra_monto)}</td>
-                  <td className="num">${formatearMonto(l.gratificacion)}</td>
-                  <td className="num">${formatearMonto(l.movilizacion)}</td>
-                  <td className="num">${formatearMonto(l.colacion)}</td>
-                  <td className="num">${formatearMonto(l.descuento_afp)}</td>
-                  <td className="num">${formatearMonto(l.descuento_salud)}</td>
-                  <td className="num">${formatearMonto(l.descuento_cesantia)}</td>
-                  <td className="num">${formatearMonto(l.descuento_impuesto)}</td>
-                  <td className="num">${formatearMonto(l.total_haberes)}</td>
-                  <td className="num">${formatearMonto(l.total_descuentos)}</td>
                   <td className="num">
                     <strong>${formatearMonto(l.liquido_pagar)}</strong>
                   </td>
                   <td>
-                    <button type="button" onClick={() => handleDescargarPdf(l)}>
-                      Descargar PDF
-                    </button>
+                    <div className="row-actions">
+                      <button type="button" onClick={() => handleDescargarPdf(l)}>
+                        Descargar PDF
+                      </button>
+                      <Link to={`/liquidaciones/${l.id}`} target="_blank" rel="noreferrer" className="btn-ghost">
+                        Detalle
+                      </Link>
+                    </div>
                   </td>
                 </tr>
               ))}

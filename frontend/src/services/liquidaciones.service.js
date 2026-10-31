@@ -6,6 +6,11 @@ export async function listarLiquidaciones(empleadoId) {
   return data;
 }
 
+export async function obtenerLiquidacion(id) {
+  const { data } = await api.get(`/liquidaciones/${id}`);
+  return data;
+}
+
 export async function generarLiquidacion(empleadoId, periodo) {
   const { data } = await api.post('/liquidaciones', { empleado_id: empleadoId, periodo });
   return data;

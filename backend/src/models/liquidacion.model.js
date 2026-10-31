@@ -38,8 +38,17 @@ async function findAll({ empleadoId, periodo, desde, hasta } = {}) {
   return rows;
 }
 
+/** Incluye nombre/apellido/rut del empleado (RF-18: página de detalle) vía JOIN, ya que
+ * un Gerente puede ver el detalle de una liquidación sin tener acceso a la ficha
+ * completa del empleado (`GET /api/empleados/:id` es exclusivo de Administrador). */
 async function findById(id) {
-  const { rows } = await pool.query(`SELECT ${COLUMNAS} FROM liquidaciones WHERE id = $1`, [id]);
+  const { rows } = await pool.query(
+    `SELECT l.*, e.nombre AS empleado_nombre, e.apellido AS empleado_apellido, e.rut AS empleado_rut
+     FROM liquidaciones l
+     JOIN empleados e ON e.id = l.empleado_id
+     WHERE l.id = $1`,
+    [id],
+  );
   return rows[0] || null;
 }
 
