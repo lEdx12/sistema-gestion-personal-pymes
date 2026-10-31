@@ -143,6 +143,95 @@ describe('POST /api/liquidaciones', () => {
   });
 });
 
+describe('RF-16/RF-17: movilización, colación e impuesto único (configurables)', () => {
+  let configuracionOriginal;
+
+  beforeAll(async () => {
+    const actual = await request(app).get('/api/configuracion').set('Authorization', authHeader);
+    configuracionOriginal = actual.body;
+  });
+
+  afterAll(async () => {
+    // Nunca dejar la configuración (fila única, compartida por todo el sistema) mutada
+    // para el resto de la suite.
+    await request(app).put('/api/configuracion').set('Authorization', authHeader).send(configuracionOriginal);
+  });
+
+  it('suma movilización/colación a los haberes sin que afecten AFP/salud/cesantía, y aplica impuesto único cuando corresponde', async () => {
+    await request(app)
+      .put('/api/configuracion')
+      .set('Authorization', authHeader)
+      .send({
+        ...configuracionOriginal,
+        afp_porcentaje: 0.1,
+        salud_porcentaje: 0.07,
+        movilizacion_monto: 30000,
+        colacion_monto: 20000,
+      });
+
+    const otro = await request(app)
+      .post('/api/empleados')
+      .set('Authorization', authHeader)
+      .send({
+        rut: generarRutDePrueba(),
+        nombre: 'Sueldo',
+        apellido: 'Alto',
+        fecha_ingreso: '2025-01-01',
+        cargo: 'Gerente de Área',
+        sueldo_base: 1500000,
+      });
+    await request(app)
+      .post('/api/contratos')
+      .set('Authorization', authHeader)
+      .send({ empleado_id: otro.body.id, tipo: 'indefinido', fecha_inicio: '2025-01-01' });
+
+    const res = await request(app)
+      .post('/api/liquidaciones')
+      .set('Authorization', authHeader)
+      .send({ empleado_id: otro.body.id, periodo: '2026-05' });
+
+    expect(res.status).toBe(201);
+    expect(Number(res.body.movilizacion)).toBe(30000);
+    expect(Number(res.body.colacion)).toBe(20000);
+
+    const baseImponible = Number(res.body.sueldo_base) + Number(res.body.horas_extra_monto) + Number(res.body.gratificacion);
+    expect(Number(res.body.descuento_afp)).toBe(Math.round(baseImponible * 0.1));
+    expect(Number(res.body.descuento_salud)).toBe(Math.round(baseImponible * 0.07));
+    // Con un sueldo alto, la base tributable debería superar el tramo exento.
+    expect(Number(res.body.descuento_impuesto)).toBeGreaterThan(0);
+
+    const totalDescuentosEsperado =
+      Number(res.body.descuento_afp) +
+      Number(res.body.descuento_salud) +
+      Number(res.body.descuento_cesantia) +
+      Number(res.body.descuento_impuesto);
+    expect(Number(res.body.total_descuentos)).toBe(totalDescuentosEsperado);
+
+    const totalHaberesEsperado = baseImponible + 30000 + 20000;
+    expect(Number(res.body.total_haberes)).toBe(totalHaberesEsperado);
+    expect(Number(res.body.liquido_pagar)).toBe(totalHaberesEsperado - totalDescuentosEsperado);
+
+    await pool.query('DELETE FROM liquidaciones WHERE empleado_id = $1', [otro.body.id]);
+    await pool.query('DELETE FROM contratos WHERE empleado_id = $1', [otro.body.id]);
+    await pool.query('DELETE FROM empleados WHERE id = $1', [otro.body.id]);
+  });
+
+  it('no aplica impuesto único cuando la base tributable queda dentro del tramo exento', async () => {
+    await request(app)
+      .put('/api/configuracion')
+      .set('Authorization', authHeader)
+      .send({ ...configuracionOriginal, movilizacion_monto: 0, colacion_monto: 0 });
+
+    const res = await request(app)
+      .post('/api/liquidaciones')
+      .set('Authorization', authHeader)
+      .send({ empleado_id: empleadoId, periodo: '2026-06' });
+
+    expect(res.status).toBe(201);
+    expect(Number(res.body.descuento_impuesto)).toBe(0);
+  });
+});
+
 describe('GET /api/liquidaciones', () => {
   it('filtra por empleado_id', async () => {
     const res = await request(app)

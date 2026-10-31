@@ -30,11 +30,13 @@ function calcularDescuentoSalud(totalHaberes, porcentaje = DESCUENTO_SALUD_PORCE
  * Seguro de cesantía (AFC): el aporte del trabajador depende del tipo de contrato —
  * en un contrato a plazo fijo el trabajador no cotiza (solo el empleador).
  */
-function calcularDescuentoCesantia(totalHaberes, tipoContrato) {
-  const porcentaje =
-    tipoContrato === 'plazo_fijo'
-      ? AFC_TRABAJADOR_PLAZO_FIJO_PORCENTAJE
-      : AFC_TRABAJADOR_INDEFINIDO_PORCENTAJE;
+function calcularDescuentoCesantia(
+  totalHaberes,
+  tipoContrato,
+  porcentajeIndefinido = AFC_TRABAJADOR_INDEFINIDO_PORCENTAJE,
+  porcentajePlazoFijo = AFC_TRABAJADOR_PLAZO_FIJO_PORCENTAJE,
+) {
+  const porcentaje = tipoContrato === 'plazo_fijo' ? porcentajePlazoFijo : porcentajeIndefinido;
   return Math.round(totalHaberes * porcentaje);
 }
 

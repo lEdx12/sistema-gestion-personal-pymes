@@ -188,3 +188,12 @@ export function IconPlus(props) {
     </svg>
   );
 }
+
+export function IconSettings(props) {
+  return (
+    <svg {...base} {...props}>
+      <circle cx="10" cy="10" r="2.6" />
+      <path d="M10 2.8v1.8M10 15.4v1.8M17.2 10h-1.8M4.6 10H2.8M15.1 4.9l-1.27 1.27M6.17 13.83 4.9 15.1M15.1 15.1l-1.27-1.27M6.17 6.17 4.9 4.9" />
+    </svg>
+  );
+}

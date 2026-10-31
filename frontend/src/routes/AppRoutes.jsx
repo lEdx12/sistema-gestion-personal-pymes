@@ -13,6 +13,7 @@ import ReporteAsistencia from '../pages/ReporteAsistencia';
 import Usuarios from '../pages/Usuarios';
 import Alertas from '../pages/Alertas';
 import Documentos from '../pages/Documentos';
+import Configuracion from '../pages/Configuracion';
 
 function AppRoutes() {
   return (
@@ -32,6 +33,7 @@ function AppRoutes() {
             <Route path="/empleados/:empleadoId/documentos" element={<Documentos />} />
             <Route path="/usuarios" element={<Usuarios />} />
             <Route path="/alertas" element={<Alertas />} />
+            <Route path="/configuracion" element={<Configuracion />} />
           </Route>
           <Route path="/empleados/:empleadoId/liquidaciones" element={<Liquidaciones />} />
           <Route path="/reportes/asistencia" element={<ReporteAsistencia />} />

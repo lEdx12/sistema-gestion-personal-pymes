@@ -2,8 +2,8 @@ const pool = require('../config/db');
 
 const COLUMNAS = `
   id, empleado_id, generado_por, periodo, sueldo_base, horas_extra_monto,
-  gratificacion, descuento_afp, descuento_salud, descuento_cesantia,
-  otros_descuentos, total_haberes, total_descuentos, liquido_pagar, pdf_url,
+  gratificacion, movilizacion, colacion, descuento_afp, descuento_salud, descuento_cesantia,
+  descuento_impuesto, otros_descuentos, total_haberes, total_descuentos, liquido_pagar, pdf_url,
   created_at
 `;
 
@@ -59,9 +59,12 @@ async function create(liquidacion) {
     sueldo_base,
     horas_extra_monto,
     gratificacion,
+    movilizacion,
+    colacion,
     descuento_afp,
     descuento_salud,
     descuento_cesantia,
+    descuento_impuesto,
     otros_descuentos,
     total_haberes,
     total_descuentos,
@@ -71,9 +74,9 @@ async function create(liquidacion) {
   const { rows } = await pool.query(
     `INSERT INTO liquidaciones
       (empleado_id, generado_por, periodo, sueldo_base, horas_extra_monto, gratificacion,
-       descuento_afp, descuento_salud, descuento_cesantia, otros_descuentos,
-       total_haberes, total_descuentos, liquido_pagar)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+       movilizacion, colacion, descuento_afp, descuento_salud, descuento_cesantia,
+       descuento_impuesto, otros_descuentos, total_haberes, total_descuentos, liquido_pagar)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
      RETURNING ${COLUMNAS}`,
     [
       empleado_id,
@@ -82,9 +85,12 @@ async function create(liquidacion) {
       sueldo_base,
       horas_extra_monto,
       gratificacion,
+      movilizacion || 0,
+      colacion || 0,
       descuento_afp,
       descuento_salud,
       descuento_cesantia,
+      descuento_impuesto || 0,
       otros_descuentos || 0,
       total_haberes,
       total_descuentos,

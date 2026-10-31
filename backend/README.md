@@ -166,15 +166,60 @@ sobrejornada del período completo dividiéndolo en bloques de 7 días y aplican
 `calcularSobrejornadaSemanal` (RF-07) a cada bloque, calcula el monto de horas extra
 (RF-08), la gratificación (25% de sueldo base + horas extra, con tope mensual), y las
 cotizaciones (AFP, salud, cesantía — esta última según el tipo de contrato: un
-trabajador con contrato a plazo fijo no cotiza cesantía). Todos los porcentajes/topes
-son configurables vía `.env` y están marcados `// TODO: validar valor legal vigente`
-— son valores de referencia, no específicos por AFP/Isapre de cada trabajador.
-`generado_por` guarda el id del usuario autenticado que generó la liquidación (RF-01,
-implementado en Sprint 2 — antes quedaba en `null`).
+trabajador con contrato a plazo fijo no cotiza cesantía). **Actualizado (RF-16):** los
+porcentajes/topes ya no se leen de `.env` sino de la tabla `configuracion_sueldo`
+(fila única, editable por el Administrador — ver más abajo); `liquidacionCalculo.service.js`
+conserva sus valores por defecto basados en `.env` solo como *fallback* de las funciones
+puras cuando se llaman sin un porcentaje explícito (lo que ya no ocurre desde
+`liquidaciones.service.js`, que siempre pasa los de la configuración vigente al momento
+de generar). `generado_por` guarda el id del usuario autenticado que generó la
+liquidación (RF-01, implementado en Sprint 2 — antes quedaba en `null`).
 Un empleado/período solo puede liquidarse una vez (constraint `UNIQUE`). Pruebas en
 `tests/liquidacionCalculo.test.js` y `tests/liquidaciones.test.js` (incluye CP-06:
 sueldo base $500.000 sin horas extra → gratificación $125.000, AFP $62.500, salud
-$43.750, cesantía $3.750, líquido a pagar $515.000).
+$43.750, cesantía $3.750, líquido a pagar $515.000, con la configuración por defecto).
+
+RF-16/RF-17 (configuración de sueldo e impuesto único — **Sprint 5**): nueva pestaña
+"Configuración", exclusiva del Administrador, para editar sin tocar código los
+porcentajes/montos usados en cada liquidación:
+
+| Método | Ruta | Body | Respuesta |
+|--------|------|------|-----------|
+| GET | `/api/configuracion` | — | `200` fila única de `configuracion_sueldo` |
+| PUT | `/api/configuracion` | `{ afp_porcentaje, salud_porcentaje, afc_indefinido_porcentaje, afc_plazo_fijo_porcentaje, gratificacion_porcentaje, gratificacion_tope_mensual, movilizacion_monto, colacion_monto, valor_utm }` | `200` configuración actualizada / `400` porcentaje fuera de [0,1] o monto negativo / `403` si no es Administrador |
+| GET | `/api/configuracion/tramos-impuesto` | — | `200` tabla de tramos del impuesto único, ordenada |
+| PUT | `/api/configuracion/tramos-impuesto` | `{ tramos: [{ orden, desde_utm, hasta_utm, factor, rebaja_utm }, ...] }` | `200` tabla reemplazada / `400` si los tramos no son consecutivos, dejan un hueco, se superponen, o un tramo que no es el último queda sin tope / `403` si no es Administrador |
+
+`configuracion_sueldo` (migración `003`) es una fila única (`id = 1`) con los
+porcentajes de AFP/salud/cesantía/gratificación, el tope de gratificación, y dos haberes
+fijos nuevos: **movilización** y **colación** — montos fijos mensuales, iguales para
+todos los empleados, que se suman a los haberes de la liquidación pero **no son
+imponibles**: no cotizan AFP/salud/cesantía ni tributan impuesto único (quedan fuera de
+`totalImponible`, se suman recién al final en `totalHaberes`). `valor_utm` también vive
+ahí porque se necesita para convertir la base tributable (pesos) a UTM al calcular el
+impuesto único.
+
+`tramos_impuesto_unico` (migración `004`) es la tabla progresiva del Impuesto Único de
+Segunda Categoría, con la misma estructura que la tabla oficial del SII: tramos
+expresados en UTM, cada uno con un `factor` (%) y una `rebaja_utm`; el último tramo tiene
+`hasta_utm = NULL` ("sin tope"). `src/utils/impuestoUnico.js` (función pura
+`calcularImpuestoUnico`) ubica el tramo de la base tributable (en UTM) y aplica
+`base*factor - rebaja`, nunca negativo. La base tributable usada por
+`liquidaciones.service.js` es el total imponible **menos** AFP y salud (son
+deducibles), sin restar la cesantía. Los valores de los tramos son de referencia inicial
+— igual que los demás porcentajes de RF-09, están sujetos a verificarse contra la tabla
+vigente del SII, y por eso son editables desde la pestaña de Configuración en vez de
+quedar fijos en el código.
+
+Importante para la integridad de liquidaciones ya generadas: cada liquidación guarda los
+montos de `movilizacion`, `colacion` y `descuento_impuesto` con los que se calculó, y el
+PDF (`liquidacionPdf.service.js`) deriva el % de AFP/salud que muestra a partir de esos
+montos guardados, no de la configuración actual — así una liquidación generada antes de
+un cambio de configuración sigue mostrando correctamente los valores con los que
+realmente se calculó. Pruebas en `tests/configuracion.test.js`,
+`tests/impuestoUnico.test.js`, y el describe `RF-16/RF-17` de
+`tests/liquidaciones.test.js` (verifica que movilización/colación no alteren AFP/salud/
+cesantía, y que el impuesto único se aplique o no según la base tributable).
 
 | Método | Ruta | Respuesta |
 |--------|------|-----------|
@@ -196,8 +241,9 @@ aparecen impresos son texto configurable vía `.env` (`EMPRESA_RAZON_SOCIAL`,
 `EMPRESA_RUT`, `AFP_NOMBRE`, `SALUD_NOMBRE`) — el sistema es de una sola PyME y no
 registra a qué AFP/Isapre está afiliado cada trabajador (sección 4 de `PROJECT.md` no
 modela eso), así que es solo texto del comprobante, no afecta ningún cálculo; los
-porcentajes mostrados sí son los configurados para AFP/salud (`DESCUENTO_AFP_PORCENTAJE`,
-`DESCUENTO_SALUD_PORCENTAJE`, ver RF-09). El tipo y fecha de término de contrato
+porcentajes de AFP/salud que sí se muestran se calculan a partir de los montos de
+`descuento_afp`/`descuento_salud` ya guardados en la liquidación (ver RF-16 más arriba),
+no de la configuración vigente al momento de la descarga. El tipo y fecha de término de contrato
 corresponden al contrato más reciente del empleado (no hay vínculo liquidación↔contrato
 en el esquema). Pruebas en `tests/liquidaciones.test.js` y `tests/numeroALetras.test.js`
 (incluye el mismo monto de un comprobante real como caso de referencia).
@@ -264,6 +310,7 @@ reportes, liquidaciones e historial de remuneraciones, es decir:
 | `GET /api/liquidaciones`, `/historial`, `/:id`, `/:id/pdf` | sí | sí (solo lectura) |
 | `POST /api/liquidaciones` (generar) | sí | sin acceso (`403`) |
 | `/api/usuarios` (RF-14) | CRUD completo | sin acceso (`403`) |
+| `/api/configuracion` y `/tramos-impuesto` (RF-16/RF-17) | lectura + edición | sin acceso (`403`) |
 
 Frontend: `RequireRole` (`src/components/RequireRole.jsx`) oculta del lado del cliente
 las rutas que el backend ya rechaza para el rol del usuario autenticado (redirige a

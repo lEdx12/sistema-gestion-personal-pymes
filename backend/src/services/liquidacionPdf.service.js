@@ -3,7 +3,6 @@ const path = require('path');
 const PDFDocument = require('pdfkit');
 const { convertirMontoATexto } = require('../utils/numeroALetras');
 const { diasDelPeriodo } = require('../utils/periodo');
-const { envNumber } = require('../utils/env');
 
 const UPLOAD_DIR = path.join(__dirname, '..', '..', 'uploads', 'liquidaciones');
 fs.mkdirSync(UPLOAD_DIR, { recursive: true });
@@ -126,8 +125,14 @@ function generarPdfLiquidacion(liquidacion, empleado, contrato) {
       'FECHA TERMINO CONTRATO',
       contrato ? formatearFechaCorta(contrato.fecha_termino) : '',
     );
-    const afpPorcentaje = formatearPorcentaje(envNumber('DESCUENTO_AFP_PORCENTAJE', 0.1) * 100);
-    const saludPorcentaje = formatearPorcentaje(envNumber('DESCUENTO_SALUD_PORCENTAJE', 0.07) * 100);
+    // El % mostrado se calcula a partir de los montos ya guardados en la liquidación
+    // (no de la configuración actual, que puede haber cambiado desde que se generó).
+    const baseImponible =
+      Number(liquidacion.sueldo_base) + Number(liquidacion.horas_extra_monto) + Number(liquidacion.gratificacion);
+    const afpPorcentaje =
+      baseImponible > 0 ? formatearPorcentaje((Number(liquidacion.descuento_afp) / baseImponible) * 100) : '0';
+    const saludPorcentaje =
+      baseImponible > 0 ? formatearPorcentaje((Number(liquidacion.descuento_salud) / baseImponible) * 100) : '0';
     filaDoble(
       'A.F.P.',
       `${empresa.afpNombre}  ${afpPorcentaje}%`,
@@ -139,7 +144,7 @@ function generarPdfLiquidacion(liquidacion, empleado, contrato) {
     doc.moveTo(MARGEN, y).lineTo(MARGEN + anchoContenido, y).lineWidth(0.5).stroke();
     y += 10;
 
-    filaDoble('DIAS', String(diasDelPeriodo(liquidacion.periodo)), 'TOTAL IMPONIBLE', `$${formatearMonto(liquidacion.total_haberes)}`);
+    filaDoble('DIAS', String(diasDelPeriodo(liquidacion.periodo)), 'TOTAL IMPONIBLE', `$${formatearMonto(baseImponible)}`);
 
     doc.moveTo(MARGEN, y).lineTo(MARGEN + anchoContenido, y).lineWidth(0.5).stroke();
     y += 14;
@@ -167,6 +172,12 @@ function generarPdfLiquidacion(liquidacion, empleado, contrato) {
       filasHaberes.push(['HORAS EXTRA', liquidacion.horas_extra_monto]);
     }
     filasHaberes.push(['GRATIFICACION LEGAL', liquidacion.gratificacion]);
+    if (Number(liquidacion.movilizacion) > 0) {
+      filasHaberes.push(['MOVILIZACION', liquidacion.movilizacion]);
+    }
+    if (Number(liquidacion.colacion) > 0) {
+      filasHaberes.push(['COLACION', liquidacion.colacion]);
+    }
     filasHaberes.push(['TOTAL HABERES', liquidacion.total_haberes, true]);
 
     const filasDescuentos = [
@@ -174,6 +185,9 @@ function generarPdfLiquidacion(liquidacion, empleado, contrato) {
       [empresa.saludNombre, liquidacion.descuento_salud],
       ['SEGURO CESANTIA', liquidacion.descuento_cesantia],
     ];
+    if (Number(liquidacion.descuento_impuesto) > 0) {
+      filasDescuentos.push(['IMPUESTO UNICO', liquidacion.descuento_impuesto]);
+    }
     if (Number(liquidacion.otros_descuentos) > 0) {
       filasDescuentos.push(['OTROS DESCUENTOS', liquidacion.otros_descuentos]);
     }

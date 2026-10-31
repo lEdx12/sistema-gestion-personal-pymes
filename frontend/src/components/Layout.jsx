@@ -6,6 +6,7 @@ import {
   IconFileText,
   IconBell,
   IconUserCog,
+  IconSettings,
   IconLogout,
 } from './icons';
 
@@ -76,6 +77,14 @@ function Layout() {
                 <IconUserCog />
               </span>
               <span className="label-text">Usuarios</span>
+            </NavLink>
+          )}
+          {esAdministrador && (
+            <NavLink to="/configuracion" className={enlaceClase}>
+              <span className="sidebar-link-icon">
+                <IconSettings />
+              </span>
+              <span className="label-text">Configuración</span>
             </NavLink>
           )}
         </nav>

@@ -11,6 +11,8 @@ const {
   calcularDescuentoSalud,
   calcularDescuentoCesantia,
 } = require('./liquidacionCalculo.service');
+const { calcularImpuestoUnico } = require('../utils/impuestoUnico');
+const configuracionService = require('./configuracion.service');
 const { generarPdfLiquidacion, rutaArchivo, nombreArchivo } = require('./liquidacionPdf.service');
 const { esPeriodoValido, obtenerBloquesSemanalesDelPeriodo } = require('../utils/periodo');
 const { slugificar } = require('../utils/slug');
@@ -79,14 +81,39 @@ async function generarLiquidacion({ empleado_id, periodo, generado_por }) {
   const horasSobrejornada = await calcularHorasSobrejornadaDelPeriodo(empleado_id, periodo);
   const { montoHorasExtra } = calcularHorasExtra({ sueldoBase, horasSobrejornada });
 
-  // Base imponible de la gratificación: sueldo base + horas extra del período.
-  const gratificacion = calcularGratificacion(sueldoBase + montoHorasExtra);
+  const config = await configuracionService.obtenerConfiguracion();
+  const tramosImpuesto = await configuracionService.listarTramosImpuesto();
 
-  const totalHaberes = sueldoBase + montoHorasExtra + gratificacion;
-  const descuentoAfp = calcularDescuentoAfp(totalHaberes);
-  const descuentoSalud = calcularDescuentoSalud(totalHaberes);
-  const descuentoCesantia = calcularDescuentoCesantia(totalHaberes, contrato.tipo);
-  const totalDescuentos = descuentoAfp + descuentoSalud + descuentoCesantia;
+  // Base imponible de la gratificación: sueldo base + horas extra del período.
+  const gratificacion = calcularGratificacion(
+    sueldoBase + montoHorasExtra,
+    Number(config.gratificacion_porcentaje),
+    Number(config.gratificacion_tope_mensual),
+  );
+
+  // Haberes imponibles: cotizan AFP/salud/cesantía y son la base del impuesto único.
+  const totalImponible = sueldoBase + montoHorasExtra + gratificacion;
+  const descuentoAfp = calcularDescuentoAfp(totalImponible, Number(config.afp_porcentaje));
+  const descuentoSalud = calcularDescuentoSalud(totalImponible, Number(config.salud_porcentaje));
+  const descuentoCesantia = calcularDescuentoCesantia(
+    totalImponible,
+    contrato.tipo,
+    Number(config.afc_indefinido_porcentaje),
+    Number(config.afc_plazo_fijo_porcentaje),
+  );
+
+  // Impuesto único: se calcula sobre la base tributable (imponible menos las
+  // cotizaciones de AFP y salud, que son deducibles), no sobre el total imponible.
+  const baseTributable = totalImponible - descuentoAfp - descuentoSalud;
+  const descuentoImpuesto = calcularImpuestoUnico(baseTributable, tramosImpuesto, Number(config.valor_utm));
+
+  // Movilización y colación: haberes no imponibles (montos fijos), no cotizan ni
+  // tributan — se suman después de calcular AFP/salud/cesantía/impuesto.
+  const movilizacion = Number(config.movilizacion_monto);
+  const colacion = Number(config.colacion_monto);
+
+  const totalHaberes = totalImponible + movilizacion + colacion;
+  const totalDescuentos = descuentoAfp + descuentoSalud + descuentoCesantia + descuentoImpuesto;
   const liquidoPagar = totalHaberes - totalDescuentos;
 
   return liquidacionModel.create({
@@ -96,9 +123,12 @@ async function generarLiquidacion({ empleado_id, periodo, generado_por }) {
     sueldo_base: sueldoBase,
     horas_extra_monto: montoHorasExtra,
     gratificacion,
+    movilizacion,
+    colacion,
     descuento_afp: descuentoAfp,
     descuento_salud: descuentoSalud,
     descuento_cesantia: descuentoCesantia,
+    descuento_impuesto: descuentoImpuesto,
     otros_descuentos: 0,
     total_haberes: totalHaberes,
     total_descuentos: totalDescuentos,
