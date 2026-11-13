@@ -49,7 +49,7 @@ function AsistenciaRow({ registro, onMarcarSalida, onActualizar }) {
     return (
       <tr>
         <td>{registro.fecha?.slice(0, 10)}</td>
-        <td colSpan="6">
+        <td colSpan="7">
           <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
             <label>
               <input
@@ -103,6 +103,7 @@ function AsistenciaRow({ registro, onMarcarSalida, onActualizar }) {
       <td>{registro.ausente ? '—' : registro.hora_entrada?.slice(0, 5) || '—'}</td>
       <td>{registro.ausente ? '—' : registro.hora_salida?.slice(0, 5) || '—'}</td>
       <td>{registro.horas_trabajadas ?? '—'}</td>
+      <td>{registro.horas_extra ? registro.horas_extra : '—'}</td>
       <td>
         <span className={`status-badge ${registro.ausente ? 'off' : 'ok'}`}>
           {registro.ausente ? 'Sí' : 'No'}

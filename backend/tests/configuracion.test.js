@@ -61,6 +61,8 @@ describe('PUT /api/configuracion', () => {
     movilizacion_monto: 30000,
     colacion_monto: 25000,
     valor_utm: 68785,
+    jornada_hora_inicio: '09:00',
+    jornada_hora_fin: '18:00',
   };
 
   it('actualiza la configuración con datos válidos', async () => {
@@ -85,6 +87,29 @@ describe('PUT /api/configuracion', () => {
       .set('Authorization', authHeader)
       .send({ ...datosValidos, movilizacion_monto: -1000 });
     expect(res.status).toBe(400);
+  });
+
+  it('rechaza una hora de jornada con formato inválido', async () => {
+    const res = await request(app)
+      .put('/api/configuracion')
+      .set('Authorization', authHeader)
+      .send({ ...datosValidos, jornada_hora_inicio: '9:00' });
+    expect(res.status).toBe(400);
+  });
+
+  it('rechaza si la hora de término de la jornada es igual a la de inicio', async () => {
+    const res = await request(app)
+      .put('/api/configuracion')
+      .set('Authorization', authHeader)
+      .send({ ...datosValidos, jornada_hora_fin: datosValidos.jornada_hora_inicio });
+    expect(res.status).toBe(400);
+  });
+
+  it('guarda el horario de jornada configurado', async () => {
+    const res = await request(app).put('/api/configuracion').set('Authorization', authHeader).send(datosValidos);
+    expect(res.status).toBe(200);
+    expect(res.body.jornada_hora_inicio).toContain('09:00');
+    expect(res.body.jornada_hora_fin).toContain('18:00');
   });
 
   it('rechaza a un Gerente', async () => {

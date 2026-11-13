@@ -1,8 +1,10 @@
 const asistenciaModel = require('../models/asistencia.model');
 const empleadoModel = require('../models/empleado.model');
+const configuracionModel = require('../models/configuracion.model');
 const {
   calcularHorasTrabajadas,
   calcularSobrejornadaSemanal,
+  calcularHorasExtraDiarias,
 } = require('./horasTrabajadas.service');
 const { calcularHorasExtra } = require('./horasExtra.service');
 const { esPeriodoValido, rangoDelPeriodo, obtenerBloquesSemanalesDelPeriodo } = require('../utils/periodo');
@@ -21,15 +23,33 @@ async function asegurarEmpleadoExiste(empleadoId) {
   return empleado;
 }
 
+/** Duración en horas de la jornada diaria configurada por el Administrador (Configuración). */
+async function obtenerJornadaMaxHoras() {
+  const config = await configuracionModel.obtener();
+  if (!config) return undefined;
+  return calcularHorasTrabajadas(config.jornada_hora_inicio, config.jornada_hora_fin);
+}
+
+/** Agrega la sobrejornada diaria (RF-06) a un registro de asistencia. */
+function conHorasExtra(registro, jornadaMaxHoras) {
+  return { ...registro, horas_extra: calcularHorasExtraDiarias(registro.horas_trabajadas, jornadaMaxHoras) };
+}
+
 async function listarAsistencia({ empleadoId, desde, hasta, ausente, pagina, porPagina } = {}) {
-  const registros = await asistenciaModel.findAll({ empleadoId, desde, hasta, ausente });
-  return paginar(registros, { pagina, porPagina });
+  const [registros, jornadaMaxHoras] = await Promise.all([
+    asistenciaModel.findAll({ empleadoId, desde, hasta, ausente }),
+    obtenerJornadaMaxHoras(),
+  ]);
+  return paginar(registros.map((r) => conHorasExtra(r, jornadaMaxHoras)), { pagina, porPagina });
 }
 
 async function obtenerAsistencia(id) {
-  const registro = await asistenciaModel.findById(id);
+  const [registro, jornadaMaxHoras] = await Promise.all([
+    asistenciaModel.findById(id),
+    obtenerJornadaMaxHoras(),
+  ]);
   if (!registro) throw new ServiceError(404, 'Registro de asistencia no encontrado');
-  return registro;
+  return conHorasExtra(registro, jornadaMaxHoras);
 }
 
 async function registrarEntrada({ empleado_id, fecha, hora_entrada }) {
@@ -207,15 +227,16 @@ async function obtenerReporteMensual({ empleadoId, periodo }) {
   if (empleadoId) {
     const empleado = await asegurarEmpleadoExiste(empleadoId);
     const { desde, hasta } = rangoDelPeriodo(periodo);
-    const [registros, resumen] = await Promise.all([
+    const [registros, resumen, jornadaMaxHoras] = await Promise.all([
       asistenciaModel.findAll({ empleadoId, desde, hasta }),
       calcularResumenMensualEmpleado(empleadoId, periodo),
+      obtenerJornadaMaxHoras(),
     ]);
     return {
       periodo,
       empleado: { id: empleado.id, nombre: empleado.nombre, apellido: empleado.apellido, rut: empleado.rut },
       ...resumen,
-      registros,
+      registros: registros.map((r) => conHorasExtra(r, jornadaMaxHoras)),
     };
   }
 
@@ -234,6 +255,25 @@ async function obtenerReporteMensual({ empleadoId, periodo }) {
   return { periodo, empleados: filas };
 }
 
+/**
+ * Versión paginada y filtrada de obtenerReporteMensual para la pantalla de reporte
+ * (RF-15); el PDF (reporteMensualPdf) sigue usando la versión completa sin paginar,
+ * porque el documento debe incluir todos los registros del período.
+ */
+async function obtenerReporteMensualPaginado({ empleadoId, periodo, ausente, pagina, porPagina }) {
+  const reporte = await obtenerReporteMensual({ empleadoId, periodo });
+
+  if (reporte.registros) {
+    const filtrados =
+      ausente === undefined ? reporte.registros : reporte.registros.filter((r) => r.ausente === ausente);
+    const { datos, total, pagina: paginaActual, totalPaginas } = paginar(filtrados, { pagina, porPagina });
+    return { ...reporte, registros: datos, pagina: paginaActual, totalPaginas, total };
+  }
+
+  const { datos, total, pagina: paginaActual, totalPaginas } = paginar(reporte.empleados, { pagina, porPagina });
+  return { ...reporte, empleados: datos, pagina: paginaActual, totalPaginas, total };
+}
+
 module.exports = {
   ServiceError,
   listarAsistencia,
@@ -242,6 +282,7 @@ module.exports = {
   registrarSalida,
   registrarAusencia,
   obtenerResumenSemanal,
+  obtenerReporteMensualPaginado,
   actualizarAsistencia,
   obtenerReporteMensual,
 };

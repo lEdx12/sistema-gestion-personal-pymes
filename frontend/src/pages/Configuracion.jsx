@@ -29,6 +29,8 @@ function valoresFormularioDesdeConfig(config) {
     movilizacion_monto: String(config.movilizacion_monto ?? ''),
     colacion_monto: String(config.colacion_monto ?? ''),
     valor_utm: String(config.valor_utm ?? ''),
+    jornada_hora_inicio: (config.jornada_hora_inicio || '').slice(0, 5),
+    jornada_hora_fin: (config.jornada_hora_fin || '').slice(0, 5),
   };
 }
 
@@ -81,6 +83,8 @@ function Configuracion() {
         movilizacion_monto: Number(form.movilizacion_monto),
         colacion_monto: Number(form.colacion_monto),
         valor_utm: Number(form.valor_utm),
+        jornada_hora_inicio: form.jornada_hora_inicio,
+        jornada_hora_fin: form.jornada_hora_fin,
       });
       setExito('Configuración guardada.');
     } catch (err) {
@@ -263,6 +267,41 @@ function Configuracion() {
         </div>
         {error && <p className="field-error">{error}</p>}
         {exito && <p className="page-subtitle" style={{ color: 'var(--success)' }}>{exito}</p>}
+        <div className="form-actions">
+          <button type="submit" disabled={guardando}>
+            {guardando ? 'Guardando...' : 'Guardar configuración'}
+          </button>
+        </div>
+      </form>
+
+      <form onSubmit={handleGuardarConfig} className="card form-grid" style={{ marginBottom: '1.5rem' }}>
+        <h2>Jornada diaria</h2>
+        <p className="page-subtitle" style={{ marginTop: 0 }}>
+          Horario de la jornada ordinaria. Las horas trabajadas por sobre esta duración se marcan
+          como horas extra en el registro de asistencia (RF-06).
+        </p>
+        <div className="form-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))' }}>
+          <label className="field">
+            Hora de inicio
+            <input
+              name="jornada_hora_inicio"
+              type="time"
+              value={form.jornada_hora_inicio}
+              onChange={handleChange}
+              required
+            />
+          </label>
+          <label className="field">
+            Hora de término
+            <input
+              name="jornada_hora_fin"
+              type="time"
+              value={form.jornada_hora_fin}
+              onChange={handleChange}
+              required
+            />
+          </label>
+        </div>
         <div className="form-actions">
           <button type="submit" disabled={guardando}>
             {guardando ? 'Guardando...' : 'Guardar configuración'}

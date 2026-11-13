@@ -16,6 +16,10 @@ const CAMPOS_PORCENTAJE = [
   'gratificacion_porcentaje',
 ];
 const CAMPOS_MONTO = ['gratificacion_tope_mensual', 'movilizacion_monto', 'colacion_monto', 'valor_utm'];
+const CAMPOS_HORA = ['jornada_hora_inicio', 'jornada_hora_fin'];
+// Acepta "HH:MM" y "HH:MM:SS" — la columna TIME de Postgres devuelve este último formato
+// al leerla (ej. en el GET que se reenvía tal cual a un PUT posterior).
+const FORMATO_HORA = /^([01]\d|2[0-3]):[0-5]\d(:[0-5]\d)?$/;
 
 function validarPorcentaje(valor, campo) {
   const numero = Number(valor);
@@ -31,9 +35,19 @@ function validarMonto(valor, campo) {
   }
 }
 
+function validarHora(valor, campo) {
+  if (typeof valor !== 'string' || !FORMATO_HORA.test(valor)) {
+    throw new ServiceError(400, `El campo "${campo}" debe tener formato "HH:MM" (ej. 09:00)`);
+  }
+}
+
 function validarDatosConfiguracion(datos) {
   for (const campo of CAMPOS_PORCENTAJE) validarPorcentaje(datos[campo], campo);
   for (const campo of CAMPOS_MONTO) validarMonto(datos[campo], campo);
+  for (const campo of CAMPOS_HORA) validarHora(datos[campo], campo);
+  if (datos.jornada_hora_inicio === datos.jornada_hora_fin) {
+    throw new ServiceError(400, 'La hora de término de la jornada debe ser distinta de la hora de inicio');
+  }
 }
 
 async function obtenerConfiguracion() {

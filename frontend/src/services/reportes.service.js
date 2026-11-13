@@ -1,9 +1,15 @@
 import api from './api';
 import { slugificar } from '../utils/texto';
 
-export async function obtenerReporteMensual({ empleadoId, periodo }) {
+export async function obtenerReporteMensual({ empleadoId, periodo, ausente, pagina, porPagina }) {
   const { data } = await api.get('/asistencia/reporte-mensual', {
-    params: { empleado_id: empleadoId || undefined, periodo },
+    params: {
+      empleado_id: empleadoId || undefined,
+      periodo,
+      ausente: ausente === '' || ausente === undefined ? undefined : ausente,
+      pagina,
+      por_pagina: porPagina,
+    },
   });
   return data;
 }

@@ -3,6 +3,10 @@ const { envNumber } = require('../utils/env');
 
 // TODO: validar valor legal vigente (Código del Trabajo, jornada ordinaria semanal)
 const JORNADA_SEMANAL_MAX_HORAS = envNumber('JORNADA_SEMANAL_MAX_HORAS', 45);
+// Jornada ordinaria diaria usada solo para mostrar la sobrejornada de CADA día en el
+// registro de asistencia (RF-06); el monto a pagar (RF-08) sigue calculándose sobre la
+// sobrejornada semanal de calcularSobrejornadaSemanal, no sobre esta suma diaria.
+const JORNADA_DIARIA_MAX_HORAS = envNumber('JORNADA_DIARIA_MAX_HORAS', 8);
 
 /**
  * Calcula las horas trabajadas a partir de la hora de entrada y salida. Soporta turnos
@@ -35,8 +39,16 @@ function calcularSobrejornadaSemanal(horasPorDia, jornadaMaxHoras = JORNADA_SEMA
   };
 }
 
+/** Horas extra de un día individual: lo que excede la jornada ordinaria diaria. */
+function calcularHorasExtraDiarias(horasTrabajadas, jornadaMaxHoras = JORNADA_DIARIA_MAX_HORAS) {
+  if (!horasTrabajadas) return 0;
+  return Math.max(0, Math.round((horasTrabajadas - jornadaMaxHoras) * 100) / 100);
+}
+
 module.exports = {
   calcularHorasTrabajadas,
   calcularSobrejornadaSemanal,
+  calcularHorasExtraDiarias,
   JORNADA_SEMANAL_MAX_HORAS,
+  JORNADA_DIARIA_MAX_HORAS,
 };

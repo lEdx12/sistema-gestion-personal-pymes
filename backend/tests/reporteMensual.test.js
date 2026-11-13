@@ -63,6 +63,30 @@ describe('GET /api/asistencia/reporte-mensual (individual)', () => {
     expect(res.body.registros).toHaveLength(5);
   });
 
+  it('incluye horas_extra por día y pagina el detalle (RF-15)', async () => {
+    const res = await request(app)
+      .get('/api/asistencia/reporte-mensual')
+      .set('Authorization', authHeader)
+      .query({ empleado_id: empleadoId, periodo: '2026-05', por_pagina: 2 });
+
+    expect(res.status).toBe(200);
+    expect(res.body.registros).toHaveLength(2);
+    expect(res.body.total).toBe(5);
+    expect(res.body.totalPaginas).toBe(3);
+    expect(res.body.registros.every((r) => 'horas_extra' in r)).toBe(true);
+  });
+
+  it('filtra el detalle por ausente (RF-15)', async () => {
+    const res = await request(app)
+      .get('/api/asistencia/reporte-mensual')
+      .set('Authorization', authHeader)
+      .query({ empleado_id: empleadoId, periodo: '2026-05', ausente: 'true' });
+
+    expect(res.status).toBe(200);
+    expect(res.body.registros).toHaveLength(1);
+    expect(res.body.registros[0].ausente).toBe(true);
+  });
+
   it('rechaza un período con formato inválido', async () => {
     const res = await request(app)
       .get('/api/asistencia/reporte-mensual')
@@ -82,10 +106,12 @@ describe('GET /api/asistencia/reporte-mensual (individual)', () => {
 
 describe('GET /api/asistencia/reporte-mensual (consolidado)', () => {
   it('sin empleado_id devuelve el consolidado de todos los empleados activos', async () => {
+    // por_pagina alto para no depender de en qué página cae este empleado entre
+    // el resto de empleados activos de la demo (RF-15: el listado es paginado).
     const res = await request(app)
       .get('/api/asistencia/reporte-mensual')
       .set('Authorization', authHeader)
-      .query({ periodo: '2026-05' });
+      .query({ periodo: '2026-05', por_pagina: 100 });
 
     expect(res.status).toBe(200);
     expect(res.body.periodo).toBe('2026-05');

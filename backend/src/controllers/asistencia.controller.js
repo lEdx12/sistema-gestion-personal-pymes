@@ -88,10 +88,13 @@ async function resumenSemanal(req, res) {
 
 async function reporteMensual(req, res) {
   try {
-    const { empleado_id, periodo } = req.query;
-    const reporte = await asistenciaService.obtenerReporteMensual({
+    const { empleado_id, periodo, ausente, pagina, por_pagina: porPagina } = req.query;
+    const reporte = await asistenciaService.obtenerReporteMensualPaginado({
       empleadoId: empleado_id,
       periodo,
+      ausente: ausente === undefined ? undefined : ausente === 'true',
+      pagina,
+      porPagina,
     });
     res.json(reporte);
   } catch (err) {

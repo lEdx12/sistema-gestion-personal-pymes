@@ -1,7 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { listarEmpleadosSelector } from '../services/empleados.service';
 import { obtenerReporteMensual, descargarReporteMensualPdf } from '../services/reportes.service';
+import Paginacion from '../components/Paginacion';
 
 function ReporteAsistencia() {
   const [searchParams] = useSearchParams();
@@ -11,6 +12,8 @@ function ReporteAsistencia() {
   const [reporte, setReporte] = useState(null);
   const [error, setError] = useState(null);
   const [descargando, setDescargando] = useState(false);
+  const [filtroAusente, setFiltroAusente] = useState('');
+  const [pagina, setPagina] = useState(1);
 
   useEffect(() => {
     // Selector acotado (id/rut/nombre): a diferencia de /api/empleados, también lo
@@ -20,12 +23,46 @@ function ReporteAsistencia() {
       .catch(() => setEmpleados([]));
   }, []);
 
+  const cargar = useCallback(
+    async (paginaActual) => {
+      const data = await obtenerReporteMensual({
+        empleadoId: empleadoId || undefined,
+        periodo,
+        ausente: filtroAusente || undefined,
+        pagina: paginaActual,
+      });
+      setReporte(data);
+    },
+    [empleadoId, periodo, filtroAusente],
+  );
+
+  // Cambio de página (paginación): recarga solo si ya hay un reporte generado.
+  useEffect(() => {
+    if (!periodo || !reporte) return;
+    cargar(pagina).catch((err) => setError(err.response?.data?.error || 'Error al generar el reporte'));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pagina]);
+
+  // Cambio de filtro: vuelve a la página 1 y recarga con el filtro nuevo.
+  useEffect(() => {
+    if (!periodo || !reporte) return;
+    setPagina(1);
+    cargar(1).catch((err) => setError(err.response?.data?.error || 'Error al generar el reporte'));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filtroAusente]);
+
   async function handleGenerar(e) {
     e.preventDefault();
     setError(null);
     setReporte(null);
+    setPagina(1);
     try {
-      const data = await obtenerReporteMensual({ empleadoId: empleadoId || undefined, periodo });
+      const data = await obtenerReporteMensual({
+        empleadoId: empleadoId || undefined,
+        periodo,
+        ausente: filtroAusente || undefined,
+        pagina: 1,
+      });
       setReporte(data);
     } catch (err) {
       setError(err.response?.data?.error || 'Error al generar el reporte');
@@ -94,6 +131,13 @@ function ReporteAsistencia() {
                 {reporte.totalHoras} h totales, {reporte.horasSobrejornada} h de sobrejornada
               </p>
             </div>
+            <div className="filtros-bar">
+              <select value={filtroAusente} onChange={(e) => setFiltroAusente(e.target.value)}>
+                <option value="">Todos</option>
+                <option value="false">Solo asistencia</option>
+                <option value="true">Solo ausencias</option>
+              </select>
+            </div>
           </div>
           <table>
             <thead>
@@ -102,6 +146,7 @@ function ReporteAsistencia() {
                 <th>Entrada</th>
                 <th>Salida</th>
                 <th className="num">Horas trabajadas</th>
+                <th className="num">Horas extra</th>
                 <th>Ausente</th>
                 <th>Justificación</th>
               </tr>
@@ -113,6 +158,7 @@ function ReporteAsistencia() {
                   <td>{r.ausente ? '—' : r.hora_entrada?.slice(0, 5) || '—'}</td>
                   <td>{r.ausente ? '—' : r.hora_salida?.slice(0, 5) || '—'}</td>
                   <td className="num">{r.horas_trabajadas ?? '—'}</td>
+                  <td className="num">{r.horas_extra ? r.horas_extra : '—'}</td>
                   <td>
                     <span className={`status-badge ${r.ausente ? 'off' : 'ok'}`}>{r.ausente ? 'Sí' : 'No'}</span>
                   </td>
@@ -121,6 +167,12 @@ function ReporteAsistencia() {
               ))}
             </tbody>
           </table>
+          <Paginacion
+            pagina={reporte.pagina || 1}
+            totalPaginas={reporte.totalPaginas || 1}
+            total={reporte.total || 0}
+            onCambiarPagina={setPagina}
+          />
         </div>
       )}
 
@@ -159,6 +211,12 @@ function ReporteAsistencia() {
               </tbody>
             </table>
           )}
+          <Paginacion
+            pagina={reporte.pagina || 1}
+            totalPaginas={reporte.totalPaginas || 1}
+            total={reporte.total || 0}
+            onCambiarPagina={setPagina}
+          />
         </div>
       )}
     </div>

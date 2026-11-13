@@ -10,6 +10,7 @@ import {
   registrarAusencia,
   obtenerResumenSemanal,
 } from '../services/asistencia.service';
+import { obtenerEmpleado } from '../services/empleados.service';
 
 const FORM_ENTRADA_VACIO = { fecha: '', hora_entrada: '' };
 const FORM_AUSENCIA_VACIO = { fecha: '', justificacion: '' };
@@ -18,6 +19,7 @@ const FORM_RESUMEN_VACIO = { desde: '', hasta: '' };
 function Asistencia() {
   const { empleadoId } = useParams();
   const [registros, setRegistros] = useState([]);
+  const [empleado, setEmpleado] = useState(null);
   const [paginacion, setPaginacion] = useState({ pagina: 1, totalPaginas: 1, total: 0 });
   const [filtroAusente, setFiltroAusente] = useState('');
   const [pagina, setPagina] = useState(1);
@@ -36,6 +38,10 @@ function Asistencia() {
   useEffect(() => {
     cargar();
   }, [cargar]);
+
+  useEffect(() => {
+    obtenerEmpleado(empleadoId).then(setEmpleado);
+  }, [empleadoId]);
 
   useEffect(() => {
     setPagina(1);
@@ -99,7 +105,7 @@ function Asistencia() {
           <Link to="/empleados" className="back-link">
             ← Volver a empleados
           </Link>
-          <h1>Asistencia del empleado #{empleadoId}</h1>
+          <h1>Asistencia de {empleado ? `${empleado.nombre} ${empleado.apellido}` : '...'}</h1>
           <p className="page-subtitle">
             <Link to={`/reportes/asistencia?empleado_id=${empleadoId}`}>Ver reporte mensual →</Link>
           </p>
@@ -192,6 +198,7 @@ function Asistencia() {
                 <th>Entrada</th>
                 <th>Salida</th>
                 <th>Horas trabajadas</th>
+                <th>Horas extra</th>
                 <th>Ausente</th>
                 <th>Justificación</th>
                 <th></th>
