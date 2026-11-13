@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { API_ORIGIN } from '../services/api';
 import { listarDocumentos, subirDocumento, eliminarDocumento } from '../services/documentos.service';
+import { obtenerEmpleado } from '../services/empleados.service';
 import { IconEye, IconTrash } from '../components/icons';
 import Paginacion from '../components/Paginacion';
 
@@ -12,6 +13,7 @@ function resolverUrl(url) {
 function Documentos() {
   const { empleadoId } = useParams();
   const [documentos, setDocumentos] = useState([]);
+  const [empleado, setEmpleado] = useState(null);
   const [paginacion, setPaginacion] = useState({ pagina: 1, totalPaginas: 1, total: 0 });
   const [filtroTipo, setFiltroTipo] = useState('');
   const [pagina, setPagina] = useState(1);
@@ -29,6 +31,10 @@ function Documentos() {
   useEffect(() => {
     cargar();
   }, [cargar]);
+
+  useEffect(() => {
+    obtenerEmpleado(empleadoId).then(setEmpleado);
+  }, [empleadoId]);
 
   useEffect(() => {
     setPagina(1);
@@ -64,7 +70,7 @@ function Documentos() {
           <Link to="/empleados" className="back-link">
             ← Volver a empleados
           </Link>
-          <h1>Documentos del empleado #{empleadoId}</h1>
+          <h1>Documentos de {empleado ? `${empleado.nombre} ${empleado.apellido}` : '...'}</h1>
         </div>
       </div>
 

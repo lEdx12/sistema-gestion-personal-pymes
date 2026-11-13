@@ -9,10 +9,12 @@ import {
   renovarContrato,
   subirDocumentoContrato,
 } from '../services/contratos.service';
+import { obtenerEmpleado } from '../services/empleados.service';
 
 function Contratos() {
   const { empleadoId } = useParams();
   const [contratos, setContratos] = useState([]);
+  const [empleado, setEmpleado] = useState(null);
   const [paginacion, setPaginacion] = useState({ pagina: 1, totalPaginas: 1, total: 0 });
   const [pagina, setPagina] = useState(1);
   const [error, setError] = useState(null);
@@ -26,6 +28,10 @@ function Contratos() {
   useEffect(() => {
     cargar();
   }, [cargar]);
+
+  useEffect(() => {
+    obtenerEmpleado(empleadoId).then(setEmpleado);
+  }, [empleadoId]);
 
   const contratoActivo = contratos.find((c) => c.activo);
 
@@ -65,7 +71,7 @@ function Contratos() {
           <Link to="/empleados" className="back-link">
             ← Volver a empleados
           </Link>
-          <h1>Contratos del empleado #{empleadoId}</h1>
+          <h1>Contratos de {empleado ? `${empleado.nombre} ${empleado.apellido}` : '...'}</h1>
         </div>
       </div>
 

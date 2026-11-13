@@ -13,6 +13,11 @@ export async function listarEmpleadosSelector() {
   return data;
 }
 
+export async function obtenerEmpleado(id) {
+  const { data } = await api.get(`/empleados/${id}`);
+  return data;
+}
+
 export async function crearEmpleado(empleado) {
   const { data } = await api.post('/empleados', empleado);
   return data;
