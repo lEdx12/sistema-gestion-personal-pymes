@@ -1,7 +1,7 @@
 const pool = require('../config/db');
 
 const COLUMNAS = `
-  id, empleado_id, tipo, fecha_inicio, fecha_termino, documento_url, activo, created_at
+  id, empleado_id, tipo, fecha_inicio, fecha_termino, documento_url, documento_nombre, activo, created_at
 `;
 
 async function findAll({ empleadoId } = {}) {
@@ -59,10 +59,10 @@ async function cerrar(id, fechaTermino, client = pool) {
   return rows[0] || null;
 }
 
-async function actualizarDocumento(id, documentoUrl) {
+async function actualizarDocumento(id, documentoUrl, documentoNombre) {
   const { rows } = await pool.query(
-    `UPDATE contratos SET documento_url = $1 WHERE id = $2 RETURNING ${COLUMNAS}`,
-    [documentoUrl, id],
+    `UPDATE contratos SET documento_url = $1, documento_nombre = $2 WHERE id = $3 RETURNING ${COLUMNAS}`,
+    [documentoUrl, documentoNombre || null, id],
   );
   return rows[0] || null;
 }

@@ -60,7 +60,7 @@ async function subirDocumento(req, res) {
       return res.status(400).json({ error: 'No se recibió ningún archivo' });
     }
     const documentoUrl = `/uploads/contratos/${req.file.filename}`;
-    const contrato = await contratosService.subirDocumento(req.params.id, documentoUrl);
+    const contrato = await contratosService.subirDocumento(req.params.id, documentoUrl, req.file.originalname);
     res.json(contrato);
   } catch (err) {
     manejarError(res, err);

@@ -153,6 +153,7 @@ describe('POST /api/contratos/:id/documento', () => {
 
     expect(res.status).toBe(200);
     expect(res.body.documento_url).toMatch(/^\/uploads\/contratos\/contrato-/);
+    expect(res.body.documento_nombre).toBe('contrato.pdf');
     archivosSubidos.push(path.basename(res.body.documento_url));
   });
 

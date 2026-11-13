@@ -177,6 +177,35 @@ button:disabled {
   box-shadow: none;
 }
 
+/* Botón "Seleccionar archivo" para un <input type="file"> oculto (ej. documento de
+   contrato, junto a "Subir"/"Reemplazar"): un <label> no recibe la regla `button {}`
+   de arriba, así que necesita su propia forma de botón para verse parejo con el botón
+   de al lado en vez de con el estilo nativo del navegador para el input de archivo. */
+.file-label {
+  display: inline-flex;
+  align-items: center;
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font: inherit;
+  font-weight: 500;
+  font-size: 0.87rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-strong);
+  background: var(--surface);
+  color: var(--text);
+  padding: 0.5rem 0.9rem;
+  line-height: 1.2;
+  cursor: pointer;
+  box-shadow: var(--shadow-xs);
+  transition: background 0.12s ease;
+}
+
+.file-label:hover {
+  background: var(--surface-hover);
+}
+
 button[type='submit'],
 .btn-primary {
   background: var(--primary);
