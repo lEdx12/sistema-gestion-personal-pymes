@@ -37,6 +37,9 @@ servicios se comunican correctamente. Desde RF-01 (Sprint 2), el resto de la app
 iniciar sesión en `/login` con las credenciales de `ADMIN_EMAIL`/`ADMIN_PASSWORD` — ver
 `backend/README.md` sección "Autenticación".
 
+Para mover el proyecto completo (código + base de datos + archivos subidos) a otro
+equipo, ver [`MIGRACION.md`](./MIGRACION.md).
+
 ## Metodología
 
 Scrum, con el backlog y los sprints gestionados en Jira (proyecto `SCRUM`). El orden de
